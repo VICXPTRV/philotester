@@ -61,11 +61,8 @@ All test cases are stored in the `cases/` directory. Each file contains pairs of
 
 **Example**:
 ```text
-# Test input
-3 400 200 200 2
-
-# Expected results
-0 4 2 2
+3 400 200 200 2    # Test input
+0 4 2 2            # Expected results
 ```
 
 ### Adding New Test Cases
