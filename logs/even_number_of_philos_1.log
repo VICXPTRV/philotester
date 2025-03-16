@@ -1,0 +1,26 @@
+00000000000 3 has taken a left fork
+00000000000 3 has taken a right fork
+00000000000 3 is eating
+00000000000 5 has taken a left fork
+00000000000 4 has taken a right fork
+00000000000 1 has taken a left fork
+00000000150 4 has taken a left fork
+00000000150 4 is eating
+00000000150 3 is sleeping
+00000000150 2 has taken a right fork
+00000000300 4 is sleeping
+00000000300 5 has taken a right fork
+00000000300 5 is eating
+00000000300 3 is thinking
+00000000300 3 has taken a left fork
+00000000450 5 is sleeping
+00000000450 1 has taken a right fork
+00000000450 1 is eating
+00000000450 4 is thinking
+00000000450 4 has taken a right fork
+00000000600 5 is thinking
+00000000600 2 has taken a left fork
+00000000600 5 has taken a left fork
+00000000600 2 is eating
+00000000600 1 is sleeping
+00000000700 2 died
