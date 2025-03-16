@@ -2,7 +2,7 @@
 
 ⚠️ Note: This project is still under development
 
-A robust testing suite for the Dining Philosophers project. Automates norm checks, compilation, test case validation, and memory leak detection.
+A testing suite for the Dining Philosophers project. Automates norm checks, compilation, test case validation, and memory leak detection.
 
 <!-- ![Test Example](add png when done) -->
 
