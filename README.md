@@ -1,6 +1,7 @@
 # Philotester 🥢
 
-⚠️ Note: This project is still under development
+> [!WARNING]  
+> This tester is not fully ready yet. It currently checks only norminette, project build, and invalid input cases.
 
 A testing suite for the Dining Philosophers project. Automates norm checks, compilation, test case validation, and memory leak detection.
 
