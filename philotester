@@ -4,24 +4,25 @@
 EXEC_PATH="../../thread_mutex"				#<------ YOUR PATH
 EXEC="${EXEC_PATH}/philo"
 CASES_PATH="cases/"
+LOGS_PATH="logs"
 if [[ ! -d "logs" ]]; then
 	mkdir logs
 else
 	rm logs/*
 fi
-LOGS_PATH="logs"
 
 # VALGRIND
-if [[ ! -f "${LOGS_PATH}/valgrind.log" ]] ; then
-	touch ${LOGS_PATH}/valgrind.log; fi
-if [[ ! -f "valgrind.supp" ]] ; then
-	touch "valgrind.supp"; fi
-VALG_LOG=${LOGS_PATH}/valgrind.log
-VALG_SUP="valgrind.supp"
+VALG_PATH="valgrind"
+[[ ! -d "${VALG_PATH}" ]] && mkdir ${VALG_PATH}
+[[ ! -f "${VALG_PATH}/valgrind.log" ]] && touch ${VALG_PATH}/valgrind.log
+[[ ! -f "${VALG_PATH}/valgrind.supp" ]] && touch "${VALG_PATH}/valgrind.supp"
+VALG_LOG=${VALG_PATH}/valgrind.log
+VALG_SUP=${VALG_PATH}/valgrind.supp
 VALGRIND="valgrind -q \
 --show-leak-kinds=all --error-limit=no \
 --suppressions=$VALG_SUP \
 --log-file=$VALG_LOG"          				#<------ YOUR VALGRIND FLAGS
+> "$VALG_LOG"
 
 # FLAGS
 flag_valgrind=false
@@ -30,6 +31,8 @@ while getopts "v" flag; do
 		v) flag_valgrind=true ;;
 	esac
 done
+shift $((OPTIND - 1))
+
 
 # CASES
 TOTAL=0
@@ -95,6 +98,7 @@ build_program() {
 	fi
 }
 
+# RUN
 run_cases() {
 	for case in ${cases[@]}; do
 		echo -e "${HEADER_EMOJI}${HEADER_COLOR} Testing: ${case}${RESET}"
@@ -122,28 +126,33 @@ run_tests() {
 
         # Run the program with the test case
         if $flag_valgrind; then
-            output=$($VALGRIND $EXEC $test_case 2>&1)
+			output=$($VALGRIND $EXEC $test_case 2>&1)
         else
             output=$($EXEC $test_case 2>&1)
         fi
+		extract_output
+		compare_results
+        ((TOTAL++))
+		((counter++))
+    done < "$test_file"
+}
 
-        # Log the output
-        echo "$output" > "$log_file"
+extract_output() {
+	# Log the output
+	echo "$output" > "$log_file"
+	actual_deaths=$(grep -c "died" "$log_file")
+	actual_meals=$(grep -c "is eating" "$log_file")
+	actual_sleeps=$(grep -c "is sleeping" "$log_file")
+	actual_thinks=$(grep -c "is thinking" "$log_file")
+}
 
-        # Extract actual stats from the log output
-        actual_deaths=$(grep -c "died" "$log_file")
-        actual_meals=$(grep -c "is eating" "$log_file")
-        actual_sleeps=$(grep -c "is sleeping" "$log_file")
-        actual_thinks=$(grep -c "is thinking" "$log_file")
-
-        # Extract expected stats
+compare_results() {
+		# Extract expected stats
         read -r expected_deaths expected_meals expected_sleeps expected_thinks <<< "$expected_values"
-
-        # Compare actual vs expected
-        if [[ "$actual_deaths" -le "$expected_deaths" \
-              && "$actual_meals" -eq "$expected_meals" \
-              && "$actual_sleeps" -eq "$expected_sleeps" \
-              && "$actual_thinks" -eq "$expected_thinks" ]]; then
+		if [[ "$actual_deaths" -le "$expected_deaths" \
+			&& "$actual_meals" -eq "$expected_meals" \
+			&& "$actual_sleeps" -eq "$expected_sleeps" \
+			&& "$actual_thinks" -eq "$expected_thinks" ]]; then
             echo -e "${GREEN}[$counter] ${WHITE}./philo ${test_case}${RESET}"
         else
             echo -e "${RED}[$counter] ./philo ${test_case}${RESET}"
@@ -153,11 +162,9 @@ run_tests() {
             echo -e "  Thinks   : $actual_thinks (actual) vs $expected_thinks (expected)${RESET}"
             ((FAILED++))
         fi
-        ((TOTAL++))
-		((counter++))
-    done < "$test_file"
 }
 
+# RESULT
 print_result() {
 	PASSED=$((TOTAL - FAILED))
 	if [[ "$PASSED" -eq "$TOTAL" ]] ; then
@@ -178,7 +185,7 @@ print_result() {
 
 # RUN SCRIPT
 print_header
-source ./measure_delay.sh
+source utils/measure_delay.sh
 check_norm
 build_program
 run_cases
