@@ -1,0 +1,9 @@
+# IDE
+.vscode
+
+# logs
+logs/*
+*.log
+
+# trashy
+.DS_store
