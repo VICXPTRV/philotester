@@ -75,13 +75,10 @@ measure_system_delay() {
     echo "[2] Peak delay: ${peak_delay}ms"
 
     if (( $(echo "$avg_delay > 10" | bc -l) )); then
-        echo -e "⚠️ ${YELLOW}Your machine delay is more than 10ms ${RESET}"
+        echo -e "⚠️ ${YELLOW} Your machine delay is more than 10ms ${RESET}"
         sleep 5
     fi
 	echo -e "\n"
 }
-
-# Run the measurement
-measure_system_delay
 
 rm usleep.c usleep

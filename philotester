@@ -1,7 +1,12 @@
 #!/bin/bash
 
+source config
+source utils/measure_delay.sh
+source utils/check_integers.sh
+source utils/style.sh
+source utils/printers.sh
+
 # PATH
-EXEC_PATH="../../thread_mutex"				#<------ YOUR PATH
 EXEC="${EXEC_PATH}/philo"
 CASES_PATH="cases/"
 LOGS_PATH="logs"
@@ -18,10 +23,7 @@ VALG_PATH="valgrind"
 [[ ! -f "${VALG_PATH}/valgrind.supp" ]] && touch "${VALG_PATH}/valgrind.supp"
 VALG_LOG=${VALG_PATH}/valgrind.log
 VALG_SUP=${VALG_PATH}/valgrind.supp
-VALGRIND="valgrind -q \
---show-leak-kinds=all --error-limit=no \
---suppressions=$VALG_SUP \
---log-file=$VALG_LOG"          				#<------ YOUR VALGRIND FLAGS
+VALGRIND="valgrind $VALGRIND_FLAGS --log-file=$VALG_LOG"
 > "$VALG_LOG"
 
 # FLAGS
@@ -33,45 +35,18 @@ while getopts "v" flag; do
 done
 shift $((OPTIND - 1))
 
-
 # CASES
-TOTAL=0
-FAILED=0
 if [[ $# -gt 0 ]]; then
 	cases=("$@")
 else
 	cases=($(ls $CASES_PATH)); fi
 
-# COLORS
-BOLD="\e[1m"
-RESET="\033[0m"
-BLACK="\033[38;5;0m"
-GREY="\033[38;5;250m"
-DARK_BLUE="\033[38;5;25m"
-LIGHT_BLUE="\033[38;5;39m"
-PINK="\033[38;5;213m"
-RED="\033[38;5;196m"
-ORANGE="\033[38;5;208m"
-YELLOW="\033[38;5;220m"
-GREEN="\033[38;5;40m"
-WHITE="\033[38;5;15m"
-PURPLE="\033[38;5;129m"
-
-# HEADER
-print_header() {
-	HEADER_NAME="DINING PHILOSOPHERS TESTER"
-	HEADER_COLOR=$LIGHT_BLUE
-	HEADER_EMOJI="🥢"
-	HEADER_SEP="-"
-	LINE_LENGTH=$(tput cols)
-	HEADER_TEXT="${HEADER_EMOJI} ${HEADER_NAME} ${HEADER_EMOJI}"
-	SEPARATOR=$(printf "%-${LINE_LENGTH}s" "" | tr " " "-")
-	HEADER_TEXT_LENGTH=${#HEADER_TEXT}
-	PADDING=$(( (LINE_LENGTH - HEADER_TEXT_LENGTH) / 2 ))
-	echo -e "\n${HEADER_COLOR}${BOLD}${SEPARATOR}${RESET}\n"
-	printf "${HEADER_COLOR}${BOLD}%*s%s%*s${RESET}\n" $PADDING "" "$HEADER_TEXT" $PADDING ""
-	echo -e "${HEADER_COLOR}${BOLD}${SEPARATOR}${RESET}\n"
-}
+# GLOBALS
+TOTAL=0
+FAILED=0
+EXEC_MSG=""
+TEST_MSG=""
+declare -A table
 
 # NORM (optional)
 check_norm() {
@@ -79,9 +54,9 @@ check_norm() {
 	make -C "$EXEC_PATH" fclean > /dev/null 2>&1
 	norminette $EXEC_PATH > /dev/null 2>&1
 	if [[ $? -eq 0 ]]; then
-		echo -e "${GREEN}✅ Norminette ok${RESET}"
+		echo -e "${OK_COLOR}${OK} Norminette ok${RESET}"
 	else
-		echo -e "${RED}💀 Norminette failed...${RESET}"
+		echo -e "${KO_COLOR}${KO} Norminette failed...${RESET}"
 	fi
 }
 
@@ -90,9 +65,9 @@ build_program() {
 
 	BUILD_FAIL=$(make -C "$EXEC_PATH" re > /dev/null 2>&1)
 	if [[ $? -eq 0 ]]; then
-		echo -e "${GREEN}✅ Build sucessfully\n${RESET}"
+		echo -e "${OK_COLOR} ${OK} Build sucessfully\n${RESET}"
 	else
-		echo -e "${RED}💀 Build failed..${RESET}"
+		echo -e "${KO_COLOR}${KO} Build failed..${RESET}"
 		echo "$BUILD_FAIL"
 		exit 1
 	fi
@@ -110,82 +85,123 @@ run_cases() {
 run_tests() {
     case="$1"
     test_file="${CASES_PATH}/${case}"  # Correct path to the test file
-    counter=1  # Counter for log files
+    test_number=1  # test_number for log files
 
     # Check if the test file exists
     if [[ ! -f "$test_file" ]]; then
-        echo -e "${RED}💀 Test file not found: ${test_file}${RESET}"
+        echo -e "${KO_COLOR}$ Test file not found: ${test_file}${RESET}"
         return
     fi
 
-    while IFS= read -r test_case && IFS= read -r expected_values; do
-        [[ -z "$test_case" || -z "$expected_values" ]] && continue
+    while IFS= read -r test_case; do
+        [[ -z "$test_case" ]] && continue
 
-        # Generate log file name with counter
-        log_file="${LOGS_PATH}/${case}_${counter}.log"
+        log_file="${LOGS_PATH}/${case}_${test_number}.log"
+		LEAK_RES=""
 
-        # Run the program with the test case
+		# RUN PROGRAMM
         if $flag_valgrind; then
 			output=$($VALGRIND $EXEC $test_case 2>&1)
+			if grep -q "definitely lost:" "$VALG_LOG"; then
+				LEAK_RES=$LEAK; fi
         else
             output=$($EXEC $test_case 2>&1)
         fi
-		extract_output
-		compare_results
+
+		extract_output "$output" "$log_file" "$test_case"
+		validate_output
+		for philo in "${!table[@]}"; do
+			echo -e "${table[$philo]}"
+		done
+		unset table
         ((TOTAL++))
-		((counter++))
+		((test_number++))
     done < "$test_file"
 }
 
 extract_output() {
+	output="$1"
+    log_file="$2"
+	test_case="$3"
+
 	# Log the output
 	echo "$output" > "$log_file"
-	actual_deaths=$(grep -c "died" "$log_file")
-	actual_meals=$(grep -c "is eating" "$log_file")
-	actual_sleeps=$(grep -c "is sleeping" "$log_file")
-	actual_thinks=$(grep -c "is thinking" "$log_file")
-}
 
-compare_results() {
-		# Extract expected stats
-        read -r expected_deaths expected_meals expected_sleeps expected_thinks <<< "$expected_values"
-		if [[ "$actual_deaths" -le "$expected_deaths" \
-			&& "$actual_meals" -eq "$expected_meals" \
-			&& "$actual_sleeps" -eq "$expected_sleeps" \
-			&& "$actual_thinks" -eq "$expected_thinks" ]]; then
-            echo -e "${GREEN}[$counter] ${WHITE}./philo ${test_case}${RESET}"
-        else
-            echo -e "${RED}[$counter] ./philo ${test_case}${RESET}"
-            echo -e "${GREY}  Deaths   : $actual_deaths (actual) vs $expected_deaths (expected)"
-            echo "  Meals    : $actual_meals (actual) vs $expected_meals (expected)"
-            echo "  Sleeps   : $actual_sleeps (actual) vs $expected_sleeps (expected)"
-            echo -e "  Thinks   : $actual_thinks (actual) vs $expected_thinks (expected)${RESET}"
-            ((FAILED++))
-        fi
-}
+	# Get program input
+	number_of_philos=$(echo "$test_case" | cut -d " " -f 1)
+	t_die="$(echo "$test_case" | cut -d " " -f 2)"
+	t_eat="$(echo "$test_case" | cut -d " " -f 3)"
+	t_sleep="$(echo "$test_case" | cut -d " " -f 4)"
+	meals_to_eat="$(echo "$test_case" | cut -d " " -f 5)"
 
-# RESULT
-print_result() {
-	PASSED=$((TOTAL - FAILED))
-	if [[ "$PASSED" -eq "$TOTAL" ]] ; then
-		RES_EMOJI="🎉"
-		RES_COLOR=$GREEN
-	else
-		RES_EMOJI="☠️"
-		RES_COLOR=$RED
+	if is_int_overflow "$number_of_philos" "$t_die" "$t_eat" "$t_sleep" "$meals_to_eat" || is_int_negative_or_zero "$number_of_philos" "$t_die" "$t_eat" "$t_sleep" "$meals_to_eat"; then
+		EXEC_MSG=$(<"$log_file")
+		return
 	fi
-	RESULT="${RES_EMOJI}  ${PASSED}/$TOTAL ${RES_EMOJI}"
-	RESULT_LENGTH=${#RESULT}
-	PADDING=$(( (LINE_LENGTH - RESULT_LENGTH) / 2 ))
-	echo -e "${RES_COLOR}${BOLD}${SEPARATOR}${RESET}\n"
-	printf "${RES_COLOR}${BOLD}%*s%s%*s${RESET}\n" $PADDING "" "$RESULT" $PADDING ""
-	echo -e "${RES_COLOR}${BOLD}${SEPARATOR}${RESET}\n"
+
+
+	# Get table with logs of each philo
+	declare -gA table
+	for ((philo=1; philo <= number_of_philos; philo++)); do
+		table["$philo"]=""
+	done
+	while IFS=" " read -r first second rest; do
+		TEST_MSG=""
+		if echo "$first $second $rest" | grep -q "segmentation"; then
+			TEST_MSG="Segmentation fault"
+			break
+		elif [[ "$first" =~ ^[0-9]+$ && "$second" =~ ^[0-9]+$ ]]; then
+			time="$first"
+			philo="$second"
+			action="$rest"
+			fill_table "$time" "$philo" "$action" table "$number_of_philos"
+		else
+			TEST_MSG="Unexpected output"
+			break
+    	fi
+	done < "$log_file"
 }
 
+fill_table() {
+	time="$1"
+	philo="$2"
+	action="$3"
+	max="$5"
+	declare -n table_ref="$4"
+
+	if [[ "$philo" -lt 1 || "$philo" -gt "$max" ]]; then
+		echo -e "${KO_COLOR}${KO} Invalid philosopher number: $philo${RESET} max: $max"
+        return
+    fi
+    table_ref["$philo"]+="[$time] $action, "
+
+}
+
+validate_output() {
+		echo -e "${KO_COLOR}[$test_number]${LEAK_RES}./philo ${test_case} ${EXEC_MSG}${RESET}"
+		echo -e "${ADD_COLOR}  Deaths   : $actual_deaths (actual) vs $expected_deaths (expected)"
+		echo "  Meals    : $actual_meals (actual) vs $expected_meals (expected)"
+		echo "  Sleeps   : $actual_sleeps (actual) vs $expected_sleeps (expected)"
+		echo -e "  Thinks   : $actual_thinks (actual) vs $expected_thinks (expected)${RESET}"
+
+		# if [[ "$actual_deaths" -le "$expected_deaths" \
+		# 	&& "$actual_meals" -eq "$expected_meals" \
+		# 	&& "$actual_sleeps" -eq "$expected_sleeps" \
+		# 	&& "$actual_thinks" -eq "$expected_thinks" ]]; then
+        #     echo -e "${OK_COLOR}[$test_number]${LEAK_RES}${WHITE}./philo ${test_case}${RESET}"
+        # else
+        #     echo -e "${KO_COLOR}[$test_number]${LEAK_RES}./philo ${test_case}${RESET} Output: ${EXEC_MSG}"
+        #     echo -e "${GREY}  Deaths   : $actual_deaths (actual) vs $expected_deaths (expected)"
+        #     echo "  Meals    : $actual_meals (actual) vs $expected_meals (expected)"
+        #     echo "  Sleeps   : $actual_sleeps (actual) vs $expected_sleeps (expected)"
+        #     echo -e "  Thinks   : $actual_thinks (actual) vs $expected_thinks (expected)${RESET}"
+        #     ((FAILED++))
+        # fi
+}
 
 # RUN SCRIPT
 print_header
-source utils/measure_delay.sh
+measure_system_delay
 check_norm
 build_program
 run_cases

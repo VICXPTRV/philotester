@@ -1,0 +1,4 @@
+#!/bin/bash
+
+EXEC_PATH="../../thread_mutex"				#<------ YOUR PATH
+VALGRIND_FLAGS="--leak-check=full"			#<------ YOUR FLAGS
