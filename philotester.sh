@@ -1,25 +1,8 @@
 #!/bin/bash
 
-# Text Styles
-BOLD="\e[1m"
-RESET="\033[0m"
-# Colors
-BLACK="\033[38;5;0m"        # Black
-GREY="\033[38;5;250m"
-DARK_BLUE="\033[38;5;25m"   # Dracula-inspired dark blue
-LIGHT_BLUE="\033[38;5;39m"  # Bright but not overwhelming light blue
-PINK="\033[38;5;213m"       # Soft pink
-RED="\033[38;5;196m"        # Bright red for errors or warnings
-ORANGE="\033[38;5;208m"     # Vibrant orange
-YELLOW="\033[38;5;220m"     # Warm yellow
-GREEN="\033[38;5;40m"       # Fresh green
-WHITE="\033[38;5;15m"       # Pure white
-PURPLE="\033[38;5;129m"     # Dracula-inspired purple (optional addition)
-
-
 # PATH
-EXEC_PATH="../../thread_mutex"					# Customize
-EXEC="${EXEC_PATH}/philo"						# Customize
+EXEC_PATH="../../thread_mutex"				#<------ YOUR PATH
+EXEC="${EXEC_PATH}/philo"
 CASES_PATH="cases/"
 if [[ ! -d "logs" ]]; then
 	mkdir logs
@@ -38,13 +21,13 @@ VALG_SUP="valgrind.supp"
 VALGRIND="valgrind -q \
 --show-leak-kinds=all --error-limit=no \
 --suppressions=$VALG_SUP \
---log-file=$VALG_LOG"
+--log-file=$VALG_LOG"          				#<------ YOUR VALGRIND FLAGS
 
 # FLAGS
-flag_valgrind=false					# Customize
+flag_valgrind=false
 while getopts "v" flag; do
 	case $flag in
-		v) flag_valgrind=true ;; 		# Customize
+		v) flag_valgrind=true ;;
 	esac
 done
 
@@ -56,11 +39,26 @@ if [[ $# -gt 0 ]]; then
 else
 	cases=($(ls $CASES_PATH)); fi
 
+# COLORS
+BOLD="\e[1m"
+RESET="\033[0m"
+BLACK="\033[38;5;0m"
+GREY="\033[38;5;250m"
+DARK_BLUE="\033[38;5;25m"
+LIGHT_BLUE="\033[38;5;39m"
+PINK="\033[38;5;213m"
+RED="\033[38;5;196m"
+ORANGE="\033[38;5;208m"
+YELLOW="\033[38;5;220m"
+GREEN="\033[38;5;40m"
+WHITE="\033[38;5;15m"
+PURPLE="\033[38;5;129m"
+
 # HEADER
 print_header() {
-	HEADER_NAME="DINING PHILOSOPHERS TESTER"	# Customize
-	HEADER_COLOR=$LIGHT_BLUE						# Customize
-	HEADER_EMOJI="🥢"							# Customize
+	HEADER_NAME="DINING PHILOSOPHERS TESTER"
+	HEADER_COLOR=$LIGHT_BLUE
+	HEADER_EMOJI="🥢"
 	HEADER_SEP="-"
 	LINE_LENGTH=$(tput cols)
 	HEADER_TEXT="${HEADER_EMOJI} ${HEADER_NAME} ${HEADER_EMOJI}"
