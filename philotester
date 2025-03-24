@@ -5,16 +5,18 @@ source utils/measure_delay.sh
 source utils/check_integers.sh
 source utils/style.sh
 source utils/printers.sh
+source utils/build_and_norm.sh
+source utils/validate_output.sh
 
 # PATH
 EXEC="${EXEC_PATH}/philo"
 CASES_PATH="cases/"
-LOGS_PATH="logs"
 if [[ ! -d "logs" ]]; then
 	mkdir logs
 else
-	rm logs/*
+	rm -f logs/*
 fi
+LOGS_PATH="logs"
 
 # VALGRIND
 VALG_PATH="valgrind"
@@ -46,86 +48,40 @@ TOTAL=0
 FAILED=0
 EXEC_MSG=""
 TEST_MSG=""
-declare -A table
+FAIL_FLAG=false
+declare -gA table
 
-# NORM (optional)
-check_norm() {
-	echo -e "${HEADER_EMOJI}${HEADER_COLOR} Testing: build and norm${RESET}"
-	make -C "$EXEC_PATH" fclean > /dev/null 2>&1
-	norminette $EXEC_PATH > /dev/null 2>&1
-	if [[ $? -eq 0 ]]; then
-		echo -e "${OK_COLOR}${OK} Norminette ok${RESET}"
-	else
-		echo -e "${KO_COLOR}${KO} Norminette failed...${RESET}"
+fill_table() {
+	time="$1"
+	philo="$2"
+	action="$3"
+	max="$4"
+
+	declare -gA table
+
+	# Initialize if not set
+	[[ -z "${table[$philo]}" ]] && table["$philo"]=""
+
+	if ! [[ "$philo" =~ ^[0-9]+$ ]]; then
+		TEST_MSG="Invalid philosopher number: $philo (not a number)"
+		FAIL_FLAG=true
+    	return
 	fi
-}
-
-# BUILD
-build_program() {
-
-	BUILD_FAIL=$(make -C "$EXEC_PATH" re > /dev/null 2>&1)
-	if [[ $? -eq 0 ]]; then
-		echo -e "${OK_COLOR} ${OK} Build sucessfully\n${RESET}"
-	else
-		echo -e "${KO_COLOR}${KO} Build failed..${RESET}"
-		echo "$BUILD_FAIL"
-		exit 1
-	fi
-}
-
-# RUN
-run_cases() {
-	for case in ${cases[@]}; do
-		echo -e "${HEADER_EMOJI}${HEADER_COLOR} Testing: ${case}${RESET}"
-		run_tests "${case}"
-		echo -e "\n"
-	done
-}
-
-run_tests() {
-    case="$1"
-    test_file="${CASES_PATH}/${case}"  # Correct path to the test file
-    test_number=1  # test_number for log files
-
-    # Check if the test file exists
-    if [[ ! -f "$test_file" ]]; then
-        echo -e "${KO_COLOR}$ Test file not found: ${test_file}${RESET}"
+	if [[ "$philo" -lt 1 || "$philo" -gt "$max" ]]; then
+		TEST_MSG="Invalid philosopher number: $philo max: $max"
+		FAIL_FLAG=true
         return
     fi
-
-    while IFS= read -r test_case; do
-        [[ -z "$test_case" ]] && continue
-
-        log_file="${LOGS_PATH}/${case}_${test_number}.log"
-		LEAK_RES=""
-
-		# RUN PROGRAMM
-        if $flag_valgrind; then
-			output=$($VALGRIND $EXEC $test_case 2>&1)
-			if grep -q "definitely lost:" "$VALG_LOG"; then
-				LEAK_RES=$LEAK; fi
-        else
-            output=$($EXEC $test_case 2>&1)
-        fi
-
-		extract_output "$output" "$log_file" "$test_case"
-		validate_output
-		for philo in "${!table[@]}"; do
-			echo -e "${table[$philo]}"
-		done
-		unset table
-        ((TOTAL++))
-		((test_number++))
-    done < "$test_file"
+    table["$philo"]+="$time $action\n"
 }
 
-extract_output() {
+validate_test() {
 	output="$1"
     log_file="$2"
 	test_case="$3"
 
 	# Log the output
-	echo "$output" > "$log_file"
+	echo -e "${output}" > "$log_file"
 
 	# Get program input
 	number_of_philos=$(echo "$test_case" | cut -d " " -f 1)
@@ -133,76 +89,89 @@ extract_output() {
 	t_eat="$(echo "$test_case" | cut -d " " -f 3)"
 	t_sleep="$(echo "$test_case" | cut -d " " -f 4)"
 	meals_to_eat="$(echo "$test_case" | cut -d " " -f 5)"
+	extra_arg="$(echo "$test_case" | cut -d " " -f 6)"
 
-	if is_int_overflow "$number_of_philos" "$t_die" "$t_eat" "$t_sleep" "$meals_to_eat" || is_int_negative_or_zero "$number_of_philos" "$t_die" "$t_eat" "$t_sleep" "$meals_to_eat"; then
-		EXEC_MSG=$(<"$log_file")
+	# Check for invalid input and stop further processing
+	if is_invalid_input "$number_of_philos" "$t_die" "$t_eat" "$t_sleep" "$meals_to_eat" "$extra_arg"; then
+		print_result
 		return
 	fi
 
-
-	# Get table with logs of each philo
-	declare -gA table
-	for ((philo=1; philo <= number_of_philos; philo++)); do
-		table["$philo"]=""
-	done
+	# Parse output
 	while IFS=" " read -r first second rest; do
 		TEST_MSG=""
 		if echo "$first $second $rest" | grep -q "segmentation"; then
 			TEST_MSG="Segmentation fault"
-			break
+			continue
 		elif [[ "$first" =~ ^[0-9]+$ && "$second" =~ ^[0-9]+$ ]]; then
 			time="$first"
 			philo="$second"
 			action="$rest"
-			fill_table "$time" "$philo" "$action" table "$number_of_philos"
+			fill_table "$time" "$philo" "$action" "$number_of_philos"
 		else
 			TEST_MSG="Unexpected output"
-			break
+			FAIL_FLAG=true
+			continue
     	fi
 	done < "$log_file"
+
+	# Handle output
+	validate_output "$number_of_philos" "$t_die" "$t_eat" "$t_sleep" "$meals_to_eat" 
+	return
 }
 
-fill_table() {
-	time="$1"
-	philo="$2"
-	action="$3"
-	max="$5"
-	declare -n table_ref="$4"
+run_tests() {
+    case="$1"
+    test_file="${CASES_PATH}/${case}"
+    test_number=1
 
-	if [[ "$philo" -lt 1 || "$philo" -gt "$max" ]]; then
-		echo -e "${KO_COLOR}${KO} Invalid philosopher number: $philo${RESET} max: $max"
-        return
-    fi
-    table_ref["$philo"]+="[$time] $action, "
+	# Run each test in current case file
+    while IFS= read -r test_case || [[ -n "$test_case" ]]; do
+        [[ -z "$test_case" ]] && continue
 
+        log_file="${LOGS_PATH}/${case}_${test_number}.log"
+		LEAK_RES=""
+
+		# !RUN PROGRAMM!
+        if $flag_valgrind; then
+			output=$(timeout $T_LIMIT $VALGRIND $EXEC $test_case 2>&1)
+			status=$?
+			if [[ $status -eq 124 ]]; then
+				TEST_MSG="Timeout"; fi
+			if grep -q "definitely lost:" "$VALG_LOG"; then
+				LEAK_RES=$LEAK; fi
+        else
+            output=$(timeout $T_LIMIT $EXEC $test_case 2>&1); fi
+			status=$?
+			if [[ $status -eq 124 ]]; then
+				TEST_MSG="Timeout"; fi
+
+		validate_test "$output" "$log_file" "$test_case"
+
+		unset table
+        ((TOTAL++))
+		((test_number++))
+    done < "$test_file"
 }
 
-validate_output() {
-		echo -e "${KO_COLOR}[$test_number]${LEAK_RES}./philo ${test_case} ${EXEC_MSG}${RESET}"
-		echo -e "${ADD_COLOR}  Deaths   : $actual_deaths (actual) vs $expected_deaths (expected)"
-		echo "  Meals    : $actual_meals (actual) vs $expected_meals (expected)"
-		echo "  Sleeps   : $actual_sleeps (actual) vs $expected_sleeps (expected)"
-		echo -e "  Thinks   : $actual_thinks (actual) vs $expected_thinks (expected)${RESET}"
-
-		# if [[ "$actual_deaths" -le "$expected_deaths" \
-		# 	&& "$actual_meals" -eq "$expected_meals" \
-		# 	&& "$actual_sleeps" -eq "$expected_sleeps" \
-		# 	&& "$actual_thinks" -eq "$expected_thinks" ]]; then
-        #     echo -e "${OK_COLOR}[$test_number]${LEAK_RES}${WHITE}./philo ${test_case}${RESET}"
-        # else
-        #     echo -e "${KO_COLOR}[$test_number]${LEAK_RES}./philo ${test_case}${RESET} Output: ${EXEC_MSG}"
-        #     echo -e "${GREY}  Deaths   : $actual_deaths (actual) vs $expected_deaths (expected)"
-        #     echo "  Meals    : $actual_meals (actual) vs $expected_meals (expected)"
-        #     echo "  Sleeps   : $actual_sleeps (actual) vs $expected_sleeps (expected)"
-        #     echo -e "  Thinks   : $actual_thinks (actual) vs $expected_thinks (expected)${RESET}"
-        #     ((FAILED++))
-        # fi
+# RUN
+run_cases() {
+	# loop through case files
+	for case in ${cases[@]}; do
+		echo -e "${HEADER_EMOJI}${HEADER_COLOR} Testing: ${case}${RESET}"
+		if [[ ! -f "${CASES_PATH}/$case" ]]; then
+			echo -e "${KO_COLOR}$ Test file not found: ${case}${RESET}"
+			return
+		fi
+		run_tests "${case}"
+		echo -e "\n"
+	done
 }
 
 # RUN SCRIPT
 print_header
-measure_system_delay
+# measure_system_delay
 check_norm
 build_program
 run_cases
-print_result
+print_footer

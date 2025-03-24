@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source ./style.sh
+source utils/style.sh
 
 # HEADER
 print_header() {
@@ -14,7 +14,30 @@ print_header() {
 }
 
 # RESULT
-print_result() {
+print_result(){
+
+	TEST_EMOJI=""
+	color=$OK_COLOR
+
+	if [[ $FAIL_FLAG == true ]]; then
+		color=$KO_COLOR
+		((FAILED++)); fi
+	if [[ -n "$TEST_MSG" ]]; then
+		TEST_EMOJI="$WARNING"; fi
+
+	echo -e "${color}[$test_number]${TEST_EMOJI}${LEAK_RES}./philo ${test_case}${ADD_COLOR} ${EXEC_MSG}${RESET}"
+
+	if [[ -n "$TEST_MSG" ]]; then
+		echo -e "${WARNING_COLOR}    $TEST_MSG${RESET}"
+	fi
+
+	EXEC_MSG=""
+	TEST_MSG=""
+	FAIL_FLAG=false
+}
+
+# FOOTER
+print_footer() {
 	PASSED=$((TOTAL - FAILED))
 	if [[ "$PASSED" -eq "$TOTAL" ]] ; then
 		RES_EMOJI=$SUCCESS

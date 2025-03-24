@@ -1,34 +1,24 @@
 #!/bin/bash
 
-# Text Styles
-BOLD="\e[1m"
-RESET="\033[0m"
-# Colors
-BLACK="\033[38;5;0m"        # Black
-GREY="\033[38;5;250m"
-DARK_BLUE="\033[38;5;25m"   # Dracula-inspired dark blue
-LIGHT_BLUE="\033[38;5;39m"  # Bright but not overwhelming light blue
-PINK="\033[38;5;213m"       # Soft pink
-RED="\033[38;5;196m"        # Bright red for errors or warnings
-ORANGE="\033[38;5;208m"     # Vibrant orange
-YELLOW="\033[38;5;220m"     # Warm yellow
-GREEN="\033[38;5;40m"       # Fresh green
-WHITE="\033[38;5;15m"       # Pure white
-PURPLE="\033[38;5;129m"     # Dracula-inspired purple (optional addition)
+source utils/style.sh
 
-echo '#include <unistd.h>
+compile_usleep() {
+	echo '#include <unistd.h>
 #include <stdlib.h>
-int main(int argc, char *argv[]) {
-    if (argc > 1) usleep(atoi(argv[1]));
-    return 0;
-}' > usleep.c
 
-cc usleep.c -o usleep
+int main(int argc, char *argv[]) {
+	if (argc > 1) usleep(atoi(argv[1]));
+	return 0;
+}
+' > utils/usleep.c
+
+	cc utils/usleep.c -o utils/usleep
+}
 
 # Function to measure the delay of usleep
 measure() {
     start=$(date +%s%N)  # Get start time in nanoseconds
-    ./usleep 200000  # Sleep for 200 milliseconds
+    ./utils/usleep 200000  # Sleep for 200 milliseconds
     end=$(date +%s%N)  # Get end time in nanoseconds
     delay=$(( (end - start) / 1000000 ))  # Calculate delay in milliseconds
     echo $((delay - 200))  # Subtract the expected 200ms and return the delay
@@ -61,11 +51,14 @@ max() {
 measure_system_delay() {
     local avgs=()
 
-    echo -en "${LIGHT_BLUE}⏳ Measuring system delay for 200ms usleep on this machine"
-    for i in {1..20}; do
-        echo -n "."
-        avgs+=($(measure))
-    done
+	compile_usleep
+
+	spinner="/|\\-"
+	for i in {1..20}; do
+		echo -en "\r${ACCENT_COLOR}${HEADER_EMOJI} Measuring system delay ${spinner:i%4:1}"
+		avgs+=($(measure))
+	done
+	echo -en "\r${ACCENT_COLOR}${HEADER_EMOJI} Measuring system delay  "
     echo -e "${RESET}\n"
 
     local avg_delay=$(mean "${avgs[@]}")
@@ -75,10 +68,9 @@ measure_system_delay() {
     echo "[2] Peak delay: ${peak_delay}ms"
 
     if (( $(echo "$avg_delay > 10" | bc -l) )); then
-        echo -e "⚠️ ${YELLOW} Your machine delay is more than 10ms ${RESET}"
+        echo -e "${WARNING} ${YELLOW} Your machine delay is more than 10ms ${RESET}"
         sleep 5
     fi
 	echo -e "\n"
+	rm utils/usleep.c utils/usleep
 }
-
-rm usleep.c usleep

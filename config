@@ -1,4 +1,5 @@
 #!/bin/bash
 
 EXEC_PATH="../../thread_mutex"				#<------ YOUR PATH
-VALGRIND_FLAGS="--leak-check=full"			#<------ YOUR FLAGS
+VALGRIND_FLAGS="--leak-check=full"				#<------ YOUR FLAGS
+T_LIMIT=10										#<------ YOUR TIMEOUT IN SECONDS
