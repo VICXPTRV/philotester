@@ -120,11 +120,9 @@ is_invalid_input() {
 	if ! [[ $EXEC_MSG =~ [Ee]rror|[Ii]nvalid|[Ww]rong|[Uu]sage ]]; then
 		TEST_MSG="Your programm should print an error message when input is invalid!"
 		FAIL_FLAG=true
-		EXEC_MSG=""
 	fi
 	
-	if [[ $EXEC_MSG =~ ^[0-9]+\ [0-9]+\ is\ (fork|eat|sleep|think|died) ]]; then
-		echo "		HERE LOGS"
+	if [[ $EXEC_MSG =~ ^[0-9]+\ [0-9] ]]; then
 		FAIL_FLAG=true
 		EXEC_MSG=""
 		TEST_MSG="Your programm shouldn't run when input is invalid!"
