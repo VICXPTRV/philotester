@@ -89,11 +89,9 @@ validate_output() {
 
             if is_invalid_death || is_invalid_action_sequence || 
                is_invalid_action_dur || is_invalid_meals_eaten; then
-                print_result
-                return
+            	return
             fi
         done
-        print_result
     done
 }
 
@@ -105,13 +103,15 @@ is_invalid_input() {
 	meals_to_eat="$5"
 	extra_arg="$6"
 
-
 	EXEC_MSG=$(<"$log_file")
 
 	if [[ -z "$extra_arg" ]] && \
-		is_int_not_overflow "$number_of_philos" "$t_die" "$t_eat" "$t_sleep" "$meals_to_eat" && \
-		is_int_positive "$number_of_philos" "$t_die" "$t_eat" "$t_sleep" "$meals_to_eat" && \
-		is_int_valid "$number_of_philos" "$t_die" "$t_eat" "$t_sleep" "$meals_to_eat"
+		( [[ -z "$meals_to_eat" ]] || 
+			( is_int_not_overflow "$meals_to_eat" && is_int_positive "$meals_to_eat" && is_int_valid "$meals_to_eat" ) 
+		) && \
+		is_int_not_overflow "$number_of_philos" "$t_die" "$t_eat" "$t_sleep" && \
+		is_int_positive "$number_of_philos" "$t_die" "$t_eat" "$t_sleep" && \
+		is_int_valid "$number_of_philos" "$t_die" "$t_eat" "$t_sleep"
 	then
 		EXEC_MSG=""
 		return 1

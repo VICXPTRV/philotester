@@ -117,6 +117,7 @@ validate_test() {
 
 	# Handle output
 	validate_output "$number_of_philos" "$t_die" "$t_eat" "$t_sleep" "$meals_to_eat" 
+	print_result
 	return
 }
 
