@@ -27,7 +27,7 @@ cd philotester
    - Open file `config`
    - Update `EXEC_PATH` to point to your philo project
    - Update `VALGRIND` to customize flags (optional)
-   - Update `T_LIMIT` to customize timeout for  
+   - Update `T_LIMIT` to customize timeout (optional)
 
 ## Usage
 
