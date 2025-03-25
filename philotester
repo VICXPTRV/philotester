@@ -30,9 +30,14 @@ VALGRIND="valgrind $VALGRIND_FLAGS --log-file=$VALG_LOG"
 
 # FLAGS
 flag_valgrind=false
-while getopts "v" flag; do
+flag_prompt=false
+HELP_MSG="Usage: ./philotester.sh [-vph] [cases...]\n\nOptions:\n  -v\tRun with valgrind\n  -p\tPrompt for manual test\n  -h\tDisplay this help message\n"
+while getopts "vph" flag; do
 	case $flag in
 		v) flag_valgrind=true ;;
+		p) flag_prompt=true ;;
+		h) echo -e "${HELP_MSG}" && exit 0 ;;
+		*) exit 1 ;;
 	esac
 done
 shift $((OPTIND - 1))
