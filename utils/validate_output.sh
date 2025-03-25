@@ -2,69 +2,152 @@
 
 source utils/style.sh
 
-is_invalid_action_sequence() {
-    local expected_order=("fork" "fork" "eat" "sleep" "think")
-    if [[ "$action" =~ fork|eat|sleep|think ]]; then
-        if [[ "$action" != "${expected_order[action_idx]}" ]]; then
-            TEST_MSG="Philo $philo: Invalid action order at $time"
-            FAIL_FLAG=true
-            return 1
-        else
-            action_idx=$(( (action_idx + 1) % 5 ))
-            return 0
-        fi
-    fi
-    return 0
+validate_death() {
+	if [[ $time -gt $((t_eat_end + t_die - 10)) ]]; then
+		TEST_MSG="Philo $philo died too late"
+		FAIL_FLAG=true
+	fi
 }
 
-is_invalid_action_dur() {
-    if [[ "$action" == "eat" ]]; then
-        if [[ "$last_eat_time" -ne 0 && "$((time - last_eat_time))" -ne "$t_eat" ]]; then
-            TEST_MSG="Philo $philo: Incorrect t_eat duration at $time"
-            FAIL_FLAG=true
-            return 1
-        fi
-        last_eat_time="$time"
-        ((eat_count++))
-    elif [[ "$action" == "sleep" ]]; then
-        if [[ "$last_sleep_time" -ne 0 && "$((time - last_sleep_time))" -ne "$t_sleep" ]]; then
-            TEST_MSG="Philo $philo: Incorrect t_sleep duration at $time"
-            FAIL_FLAG=true
-            return 1
-        fi
-        last_sleep_time="$time"
-    fi
-    return 0
+is_alive() {
+	t_eat_end="$1"
+	t_die="$2"
+
+	if [[ $time -gt $((t_eat_end + t_die)) ]]; then
+		return 1
+	fi
+	return 0
 }
 
-is_invalid_death() {
-
-	if ! [[ "$action" =~ died ]]; then
-		return 0; fi
-
-	# if [[ $TEST_MSG =~ [Tt]imeout ]]
-
-
-    if [[ "$((time - last_eat_time))" -lt "$t_die" ]]; then
-        TEST_MSG="Philo $philo: Unexpected death at $time"
-        FAIL_FLAG=true
-        return 1
-    fi
-    if [[ "$action" == "died" && "$time" -ne "$((last_eat_time + t_die))" ]]; then
-        TEST_MSG="Philo $philo: Incorrect time of death at $time"
-        FAIL_FLAG=true
-        return 1
-    fi
-    return 0
+validate_last_action() {
+	if [[ $flag_debug == true ]]; then
+		echo "		🐞DEBUG: Philo $philo: [$time] [$action] last_action()"
+	fi
+	if [[ $action =~ die ]]; then
+		validate_death
+	else
+		if [[ $action =~ eat ]]; then
+			TEST_MSG="Unexpected eating"
+		elif [[ $action =~ sleep ]]; then
+			TEST_MSG="Unexpected sleeping"
+		elif [[ $action =~ think ]]; then
+			TEST_MSG="Unexpected thinking"
+		else
+			TEST_MSG="Unexpected action"
+		fi
+		FAIL_FLAG=true
+	fi
 }
 
-is_invalid_meals_eaten() {
-    if [[ -n "$meals_to_eat" && "$eat_count" -ge "$meals_to_eat" ]]; then
-        TEST_MSG="Philo $philo: Ate more than $meals_to_eat times"
-        FAIL_FLAG=true
-        return 1
-    fi
-    return 0
+move_to_next_action() {
+	((i++))
+	if (( i >= ${#logs[@]} )); then return; fi
+	time="${logs[i]%% *}" # before space
+	action="${logs[i]#* }" # after the space
+	if [[ $flag_debug == true ]]; then
+		echo "		🐞DEBUG: Philo $philo: [$time] [$action] move_to_next_action()"; fi
+
+}
+
+validate_fork() {
+
+	if [[ $flag_debug == true ]]; then
+		echo "		🐞DEBUG: Philo $philo: [$time] [$action] validate_fork()"
+	fi
+
+	if [[ $action =~ fork ]] && is_alive "$t_eat_end" "$t_die" ; then
+		move_to_next_action
+	else
+		validate_last_action
+	fi
+}
+
+validate_eating() {
+
+	if [[ $flag_debug == true ]]; then
+		echo "		🐞DEBUG: Philo $philo: [$time] [$action] validate_eating()"
+	fi
+
+	if [[ $action =~ eat ]] && is_alive "$t_eat_end" "$t_die" ; then
+		t_eat_start=$time
+		((meals_eaten++))
+		t_eat_end=$(($t_eat_start + $t_eat))		
+		move_to_next_action
+	else
+		validate_last_action
+	fi
+
+}
+
+validate_sleeping() {
+
+	if [[ $flag_debug == true ]]; then
+		echo "		🐞DEBUG: Philo $philo: [$time] [$action] validate_sleeping()"
+	fi
+
+	if [[ $action =~ sleep ]] && is_alive "$t_eat_end" "$t_die" ; then
+		t_sleep_start=$time
+		if [[ $t_sleep_start -ne t_eat_end ]]; then
+			TEST_MSG="Philo $philo eating duration is wrong"
+			FAIL_FLAG=true
+			return
+		fi
+		move_to_next_action
+	else
+		validate_last_action
+	fi
+}
+
+validate_thinking() {
+
+	if [[ $flag_debug == true ]]; then
+		echo "		🐞DEBUG: Philo $philo: [$time] [$action] validate_thinking()"
+	fi
+	if [[ $action =~ think ]] && is_alive "$t_eat_end" "$t_die" ; then
+	t_sleep_end=$time
+		if [[ $t_sleep -ne $((t_sleep_end - t_sleep_start)) ]]; then
+			TEST_MSG="Philo $philo: Time to sleep is wrong"
+			FAIL_FLAG=true
+			return
+		fi
+		move_to_next_action
+	else
+		validate_last_action
+	fi
+}
+
+validate_meals_eaten() {
+
+	if [[ -z $meals_to_eat ]]; then
+		return
+	fi
+	if [[ $meals_eaten -eq $meals_to_eat ]]; then
+		TEST_MSG="Philo $philo: Shouldn't eat more than $meals_to_eat times"
+		FAIL_FLAG=true
+	fi
+}
+
+validate_output_one_philo() {
+
+	logs=(${table[0]//$'\n'/ })
+
+	i=0
+	time="${logs[i]}"
+	action="${logs[i+1]}"
+
+	while (( i<${#logs[@]} )); do
+
+		# Has taken a fork
+		validate_fork
+		# Died
+		if [[ $action =~ die ]]; then
+			validate_death
+		else
+			TEST_MSG="Philo 1: Didn't die"
+			FAIL_FLAG=true
+			break
+		fi
+	done	
 }
 
 validate_output() {
@@ -74,24 +157,44 @@ validate_output() {
     t_sleep="$4"
     meals_to_eat="$5"
 
+	if [[ $number_of_philos -eq 1 ]]; then
+		validate_output_one_philo
+		return; fi
+	
     for ((philo=1; philo<=number_of_philos; philo++)); do
-        logs=(${table[$philo-1]//$'\n'/ })
-        eat_count=0
-        last_eat_time=0
-        last_sleep_time=0
-        action_idx=0
 
-        for ((i=0; i<${#logs[@]}; i+=2)); do
-            time="${logs[i]}"
-            action="${logs[i+1]}"
+		i=0
+		logs=()
 
-			# if action == "died" && next action exists
+		IFS=$'\n' read -rd '' -a logs <<< "${table[$philo]}"  # Read into array logs, split by newline
 
-            if is_invalid_death || is_invalid_action_sequence || 
-               is_invalid_action_dur || is_invalid_meals_eaten; then
-            	return
-            fi
+		time="${logs[i]%% *}" # before space
+		action="${logs[i]#* }" # after the space
+
+		if [[ $flag_debug == true ]]; then
+			echo "		🐞DEBUG: Philo $philo: [$time] [$action] validate_output()"; fi
+
+		t_eat_end=$time
+		t_eat_start=0
+		t_sleep_start=0
+		t_sleep_end=0
+		meals_eaten=0
+
+		while [[ i -lt ${#logs[@]} && "$FAIL_FLAG" == "false" ]]; do
+
+			# Has taken forks
+			validate_fork
+			validate_fork
+			# Is eating
+			validate_eating
+			# Is sleeping
+			validate_sleeping
+			# Is thinking
+			validate_thinking
         done
+
+		validate_meals_eaten
+
     done
 }
 

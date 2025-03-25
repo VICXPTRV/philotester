@@ -31,13 +31,15 @@ VALGRIND="valgrind $VALGRIND_FLAGS --log-file=$VALG_LOG"
 # FLAGS
 flag_valgrind=false
 flag_prompt=false
+flag_debug=false
 HELP_MSG="Usage: ./philotester.sh [-vph] [cases...]\n\nOptions:\n  -v\tRun with valgrind\n  -p\tPrompt for manual test\n  -h\tDisplay this help message\n"
-while getopts "vph" flag; do
+while getopts "vpd>h" flag; do
 	case $flag in
 		v) flag_valgrind=true ;;
 		p) flag_prompt=true ;;
+		d) flag_debug=true ;;
 		h) echo -e "${HELP_MSG}" && exit 0 ;;
-		*) exit 1 ;;
+		*) echo -e "Use -h for help"; exit 1 ;;
 	esac
 done
 shift $((OPTIND - 1))
@@ -54,7 +56,6 @@ FAILED=0
 EXEC_MSG=""
 TEST_MSG=""
 FAIL_FLAG=false
-declare -gA table
 
 fill_table() {
 	time="$1"
@@ -77,7 +78,7 @@ fill_table() {
 		FAIL_FLAG=true
         return
     fi
-    table["$philo"]+="$time $action\n"
+    table["$philo"]+="$time $action"$'\n'
 }
 
 validate_test() {
