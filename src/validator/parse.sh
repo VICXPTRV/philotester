@@ -9,8 +9,6 @@ fill_table() {
 	max="$4"
 
 	declare -gA table
-
-	# Initialize if not set
 	[[ -z "${table[$philo]}" ]] && table["$philo"]=""
 
 	if ! [[ "$philo" =~ ^[0-9]+$ ]]; then

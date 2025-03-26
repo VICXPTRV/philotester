@@ -12,9 +12,9 @@ validate_sleeping() {
 		echo "		🐞DEBUG: Philo $philo: [$time] [$action] validate_sleeping()"
 	fi
 
-	if [[ $action =~ sleep ]] && is_alive "$t_eat_end" "$t_die" ; then
+	if [[ $action =~ sleep ]] && is_alive "$t_die" ; then
 		t_sleep_start=$time
-		if [[ $t_sleep_start -ne $t_eat_end && $t_sleep_start -gt $(($t_eat_end + $T_DELAY_TOLERANCE)) ]]; then
+		if [[ $t_sleep_start -ne $T_LAST_MEAL && $t_sleep_start -gt $(($T_LAST_MEAL + $T_DELAY_TOLERANCE)) ]]; then
 			TEST_MSG="Philo $philo eating duration is wrong"
 			F_FAIL=true
 			F_PHILO_LOG_END=true

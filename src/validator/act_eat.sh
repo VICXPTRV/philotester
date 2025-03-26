@@ -12,10 +12,10 @@ validate_eating() {
 		echo "		🐞DEBUG: Philo $philo: [$time] [$action] validate_eating()"
 	fi
 
-	if [[ $action =~ eat ]] && is_alive "$t_eat_end" "$t_die" ; then
+	if [[ $action =~ eat ]] && is_alive "$T_LAST_MEAL" "$t_die" ; then
 		t_eat_start=$time
 		((meals_eaten++))
-		t_eat_end=$(($t_eat_start + $t_eat))		
+		T_LAST_MEAL=$(($t_eat_start + $t_eat))		
 		move_to_next_action
 	else
 		validate_last_action

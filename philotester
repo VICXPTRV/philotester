@@ -27,6 +27,8 @@ F_FAIL=false
 F_TIMEOUT=false
 F_PHILO_LOG_END=false
 T_DEATH_TIME=-1
+T_LAST_MEAL=-1
+T_PROGRAM_END=-1
 T_DELAY_TOLERANCE_DEATH=10 # ms by subject requirements
 
 # PATH

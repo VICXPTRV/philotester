@@ -5,7 +5,7 @@ source utils/style.sh
 validate_death() {
 
 	if [[ $F_DEBUG == true ]]; then
-		echo "		🐞DEBUG: time: $time, t_eat_end: $t_eat_end, t_die: $t_die"; fi
+		echo "		🐞DEBUG: time: $time, T_LAST_MEAL: $T_LAST_MEAL, t_die: $t_die"; fi
 
 	if is_death_time "$time" && [[ $action =~ death ]]; then
 		if [[ $T_DEATH_TIME -gt 0 ]]; then
@@ -14,7 +14,7 @@ validate_death() {
 			TEST_MSG="Timeout after $T_TIMEOUT, no one died"
 		fi
 
-	elif (($time - ($t_eat_end + $t_die) > $T_DELAY_TOLERANCE_DEATH)); then
+	elif (($time - ($T_LAST_MEAL + $t_die) > $T_DELAY_TOLERANCE_DEATH)); then
 		TEST_MSG="Philo $philo died too late"
 		F_FAIL=true
 	fi
@@ -32,10 +32,9 @@ is_death_time() {
 }
 
 is_alive() {
-	t_eat_end="$1"
-	t_die="$2"
+	t_die="$1"
 
-	if [[ $time -gt $((t_eat_end + t_die)) ]]; then
+	if [[ $time -gt $((T_LAST_MEAL + t_die)) ]]; then
 		if [[ $F_DEBUG == true ]]; then
 			echo "			🐞DEBUG: DEATH_TIME set to $time by $philo"; fi
 		DEATH_TIME=$time
