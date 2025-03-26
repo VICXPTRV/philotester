@@ -4,11 +4,11 @@ source utils/style.sh
 
 validate_eating() {
 
-	if [[ $FLAG_END == true ]]; then
+	if [[ $F_PHILO_LOG_END == true ]]; then
 		return
 	fi
 
-	if [[ $flag_debug == true ]]; then
+	if [[ $F_DEBUG == true ]]; then
 		echo "		🐞DEBUG: Philo $philo: [$time] [$action] validate_eating()"
 	fi
 
@@ -30,7 +30,7 @@ validate_meals_eaten() {
 	fi
 	if [[ $meals_eaten -lt $meals_to_eat ]]; then
 		TEST_MSG="Philo $philo: Should eat at least $meals_to_eat times, but ate $meals_eaten"
-		FLAG_FAIL=true
-		FLAG_END=true
+		F_FAIL=true
+		F_PHILO_LOG_END=true
 	fi
 }

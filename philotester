@@ -23,8 +23,8 @@ TOTAL=0
 FAILED=0
 EXEC_MSG=""
 TEST_MSG=""
-FLAG_FAIL=false
-FLAG_END=false
+F_FAIL=false
+F_PHILO_LOG_END=false
 T_DEATH_TIME=-1
 T_DELAY_TOLERANCE_DEATH=10 # ms by subject requirements
 
@@ -49,15 +49,15 @@ VALGRIND="valgrind $VALGRIND_FLAGS --log-file=$VALG_LOG"
 > "$VALG_LOG"
 
 # FLAGS
-flag_valgrind=false
-flag_manual=false
-flag_debug=false
+F_VALGRIND=false
+F_MANUAL=false
+F_DEBUG=false
 HELP_MSG="Usage: ./philotester.sh [-vmh] [cases...]\n\nOptions:\n  -v\tRun with valgrind\n  -m\tManual mode\n  -h\tDisplay this help message\n"
 while getopts "vmdh" flag; do
 	case $flag in
-		v) flag_valgrind=true ;;
-		m) flag_manual=true ;;
-		d) flag_debug=true ;;
+		v) F_VALGRIND=true ;;
+		m) F_MANUAL=true ;;
+		d) F_DEBUG=true ;;
 		h) echo -e "${HELP_MSG}" && exit 0 ;;
 		*) echo -e "Use -h for help"; exit 1 ;;
 	esac

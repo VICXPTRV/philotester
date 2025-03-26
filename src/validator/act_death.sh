@@ -4,7 +4,7 @@ source utils/style.sh
 
 validate_death() {
 
-	if [[ $flag_debug == true ]]; then
+	if [[ $F_DEBUG == true ]]; then
 		echo "		🐞DEBUG: time: $time, t_eat_end: $t_eat_end, t_die: $t_die"
 	fi
 	if is_later_than_death "$time"; then
@@ -12,17 +12,17 @@ validate_death() {
 
 	elif (($time - ($t_eat_end + $t_die) > $T_DELAY_TOLERANCE_DEATH)); then
 		TEST_MSG="Philo $philo died too late"
-		FLAG_FAIL=true
+		F_FAIL=true
 	fi
 
-	FLAG_END=true
+	F_PHILO_LOG_END=true
 }
 
 is_later_than_death() {
 	t_current="$1"
 
 	if [[ $T_DEATH_TIME -gt 0 && $t_current -gt $T_DEATH_TIME ]]; then
-		FAIL_FLAG=true
+		F_FAIL=true
 		return 0
 	fi
 	return 1
@@ -33,7 +33,7 @@ is_alive() {
 	t_die="$2"
 
 	if [[ $time -gt $((t_eat_end + t_die)) ]]; then
-		if [[ $flag_debug == true ]]; then
+		if [[ $F_DEBUG == true ]]; then
 			echo "			🐞DEBUG: DEATH_TIME set to $time by $philo"; fi
 		DEATH_TIME=$time
 		return 1

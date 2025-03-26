@@ -30,11 +30,11 @@ print_result(){
 	TEST_EMOJI=""
 	color=$OK_COLOR
 
-	if [[ $flag_debug == true ]]; then
-		echo "	🐞DEBUG: $TEST_MSG, $EXEC_MSG, $FAIL_FLAG"
+	if [[ $F_DEBUG == true ]]; then
+		echo "	🐞DEBUG: $TEST_MSG, $EXEC_MSG, $F_FAIL"
 	fi
 
-	if [[ $FAIL_FLAG == true ]]; then
+	if [[ $F_FAIL == true ]]; then
 		color=$KO_COLOR
 		((FAILED++)); fi
 	if [[ -n "$TEST_MSG" ]]; then
@@ -48,7 +48,7 @@ print_result(){
 
 	EXEC_MSG=""
 	TEST_MSG=""
-	FAIL_FLAG=false
+	F_FAIL=false
 }
 
 # FOOTER

@@ -12,7 +12,7 @@ exec_program() {
 	LEAK_RES=""
 
 	# !RUN PROGRAMM!
-	if $flag_valgrind; then
+	if $F_VALGRIND; then
 		output=$(timeout $T_LIMIT $VALGRIND $EXEC $test_case 2>&1)
 		status=$?
 		if [[ $status -eq 124 ]]; then
@@ -50,7 +50,7 @@ run_tests() {
 run_cases() {
 
 	# Manual test mode
-	if [[ $flag_manual == true ]]; then
+	if [[ $F_MANUAL == true ]]; then
 		prompt=""
 		terminate="^(q|quit)$"
 		test_number=1

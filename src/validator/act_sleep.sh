@@ -4,11 +4,11 @@ source utils/style.sh
 
 validate_sleeping() {
 
-	if [[ $FLAG_END == true ]]; then
+	if [[ $F_PHILO_LOG_END == true ]]; then
 		return
 	fi
 
-	if [[ $flag_debug == true ]]; then
+	if [[ $F_DEBUG == true ]]; then
 		echo "		🐞DEBUG: Philo $philo: [$time] [$action] validate_sleeping()"
 	fi
 
@@ -16,8 +16,8 @@ validate_sleeping() {
 		t_sleep_start=$time
 		if [[ $t_sleep_start -ne $t_eat_end && $t_sleep_start -gt $(($t_eat_end + $T_DELAY_TOLERANCE)) ]]; then
 			TEST_MSG="Philo $philo eating duration is wrong"
-			FLAG_FAIL=true
-			FLAG_END=true
+			F_FAIL=true
+			F_PHILO_LOG_END=true
 			return
 		fi
 		move_to_next_action

@@ -4,11 +4,11 @@ source utils/style.sh
 
 validate_fork() {
 
-	if [[ $FLAG_END == true ]]; then
+	if [[ $F_PHILO_LOG_END == true ]]; then
 		return
 	fi
 
-	if [[ $flag_debug == true ]]; then
+	if [[ $F_DEBUG == true ]]; then
 		echo "		🐞DEBUG: Philo $philo: [$time] [$action] validate_fork()"
 	fi
 

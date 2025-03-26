@@ -15,12 +15,12 @@ fill_table() {
 
 	if ! [[ "$philo" =~ ^[0-9]+$ ]]; then
 		TEST_MSG="Invalid philosopher number: $philo (not a number)"
-		FLAG_FAIL=true
+		F_FAIL=true
     	return
 	fi
 	if [[ "$philo" -lt 1 || "$philo" -gt "$max" ]]; then
 		TEST_MSG="Invalid philosopher number: $philo max: $max"
-		FLAG_FAIL=true
+		F_FAIL=true
         return
     fi
     table["$philo"]+="$time $action"$'\n'
@@ -44,7 +44,7 @@ parse_output() {
 			fill_table "$time" "$philo" "$action" "$number_of_philos"
 		else
 			TEST_MSG="Unexpected output"
-			FLAG_FAIL=true
+			F_FAIL=true
 			continue
 		fi
 	done < "$log_file"
