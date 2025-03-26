@@ -147,6 +147,7 @@ exec_program() {
 		status=$?
 		if [[ $status -eq 124 ]]; then
 			TEST_MSG="Timeout"; fi
+
 	validate_test "$output" "$log_file" "$test_case"
 
 	unset table
@@ -175,11 +176,12 @@ run_cases() {
 		prompt=""
 		terminate="e|exit"
 		test_number=1
-		echo -e "${MANUAL_TEST_EMOJI}${MANUAL_TEST} Manual test mode. Input exit or e to finish testing${RESET}"
+		echo -e "${MANUAL_TEST_EMOJI}${MANUAL_TEST_COLOR} Enter manual test mode ${ADD_COLOR}(exit or e to finish)\n${RESET}"
 		while ! [[ $prompt =~ $terminate ]]; do
-			read -p "${}[$test_number] > " prompt
+			read -p "\n> " prompt
+			echo -e "\n"
 			if [[ $prompt =~ $terminate ]]; then
-				echo -e "${MANUAL_TEST_EMOJI}${MANUAL_TEST} Exiting manual test mode${RESET}"
+				echo -e "${MANUAL_TEST_COLOR}...Exiting manual test mode${RESET}\n"
 				return; fi
 	
 			exec_program "$prompt" "$test_number"
