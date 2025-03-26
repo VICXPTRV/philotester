@@ -3,14 +3,21 @@
 source utils/style.sh
 
 FLAG_END=false
+DEATH_TIME=-1
 
 validate_death() {
-	if [[ $time -gt $((t_eat_end + t_die - 10)) ]]; then
+	if [[ $DEATH_TIME -gt 0 && $time -gt $DEATH_TIME ]]; then
+		TEST_MSG="Programm continue after first death"
+		FLAG_FAIL=true
+
+	elif [[ $time -gt $((t_eat_end + t_die - 10)) ]]; then
 		TEST_MSG="Philo $philo died too late"
 		FLAG_FAIL=true
 	fi
+
 	FLAG_END=true
 }
+
 
 is_alive() {
 	t_eat_end="$1"
@@ -19,6 +26,9 @@ is_alive() {
 	if [[ $time -gt $((t_eat_end + t_die)) ]]; then
 		return 1
 	fi
+
+	DEATH_TIME=$time
+
 	return 0
 }
 
@@ -183,7 +193,8 @@ validate_output() {
 
 	if [[ $number_of_philos -eq 1 ]]; then
 		validate_output_one_philo
-		return; fi
+		return
+	fi
 	
     for ((philo=1; philo<=number_of_philos; philo++)); do
 
@@ -201,7 +212,7 @@ validate_output() {
 				echo "	🐞DEBUG: LOGS: $philo: ${logs[i]}"
 				((i++))
 			done
-			echo "		🐞DEBUG: Philo $philo: [$time] [$action] validate_output()"; fi
+		fi
 
 		t_eat_end=$time
 		t_eat_start=0
@@ -221,6 +232,9 @@ validate_output() {
 			# Is thinking
 			validate_thinking
         done
+
+		if [[ $flag_debug == true ]]; then
+			echo -e "\n"; fi
 
 		validate_meals_eaten
 
