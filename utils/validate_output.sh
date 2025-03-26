@@ -197,6 +197,10 @@ validate_output() {
 		action="${logs[i]#* }" # after the space
 
 		if [[ $flag_debug == true ]]; then
+			while [[ i -lt ${#logs[@]} ]]; do
+				echo "	🐞DEBUG: LOGS: $philo: ${logs[i]}"
+				((i++))
+			done
 			echo "		🐞DEBUG: Philo $philo: [$time] [$action] validate_output()"; fi
 
 		t_eat_end=$time
