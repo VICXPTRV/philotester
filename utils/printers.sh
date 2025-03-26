@@ -2,8 +2,16 @@
 
 source utils/style.sh
 
+print_tester_info() {
+    echo -e "${INFO_EMOJI} ${INFO_COLOR}This tester helps catch regressions during development. Do not rely on results for final validation.${RESET}"
+    echo -e "    ${INFO_COLOR}More info: ${UNDERLINE}https://github.com/VICXPTRV/philotester${RESET}"
+    echo -e "    ${INFO_COLOR}Use -h for help.${RESET}"
+    echo
+}
+
 # HEADER
 print_header() {
+
 	HEADER_TEXT="${HEADER_EMOJI} ${HEADER_NAME} ${HEADER_EMOJI}"
 	SEPARATOR=$(printf "%-${LINE_LENGTH}s" "" | tr " " "-")
 	HEADER_TEXT_LENGTH=${#HEADER_TEXT}
@@ -11,7 +19,10 @@ print_header() {
 	echo -e "\n${HEADER_COLOR}${BOLD}${SEPARATOR}${RESET}\n"
 	printf "${HEADER_COLOR}${BOLD}%*s%s%*s${RESET}\n" $PADDING "" "$HEADER_TEXT" $PADDING ""
 	echo -e "${HEADER_COLOR}${BOLD}${SEPARATOR}${RESET}\n"
+
+	print_tester_info
 }
+
 
 # RESULT
 print_result(){
@@ -38,6 +49,7 @@ print_result(){
 
 # FOOTER
 print_footer() {
+
 	PASSED=$((TOTAL - FAILED))
 	if [[ "$PASSED" -eq "$TOTAL" ]] ; then
 		RES_EMOJI=$SUCCESS

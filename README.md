@@ -11,7 +11,7 @@ A testing suite for the Dining Philosophers project. Automates norm checks, comp
 
 - **Norminette** - Ensures code adheres to standards
 - **Compilation** - Builds your project before testing
-- **Valgrind** - Memory leak detection with `-v` flag
+- **Valgrind** - Memory leak detection
 - **Test Cases** - Predefined scenarios in `cases/` directory
 - **Performance** - Measures system delay impact
 
@@ -31,20 +31,14 @@ cd philotester
 
 ## Usage
 
-**Basic test:**
 ```bash
-./philotester
+./philotester [options] [cases...]
 ```
+**Options**
+- `-v`    Run with valgrind
+- `-m`    Manual mode
+- `-h`    Display help message
 
-**Test with valgrind memory checks:**
-```bash
-./philotester -v
-```
-
-**Run specific test cases:**
-```bash
-./philotester invalid_input one_philo
-```
 
 ## Adding New Test Cases
 
