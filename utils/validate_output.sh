@@ -2,11 +2,14 @@
 
 source utils/style.sh
 
+FLAG_END=false
+
 validate_death() {
 	if [[ $time -gt $((t_eat_end + t_die - 10)) ]]; then
 		TEST_MSG="Philo $philo died too late"
-		FAIL_FLAG=true
+		FLAG_FAIL=true
 	fi
+	FLAG_END=true
 }
 
 is_alive() {
@@ -35,7 +38,8 @@ validate_last_action() {
 		else
 			TEST_MSG="Unexpected action"
 		fi
-		FAIL_FLAG=true
+		FLAG_FAIL=true
+		FLAG_END=true
 	fi
 }
 
@@ -51,6 +55,10 @@ move_to_next_action() {
 
 validate_fork() {
 
+	if [[ $FLAG_END == true ]]; then
+		return
+	fi
+
 	if [[ $flag_debug == true ]]; then
 		echo "		🐞DEBUG: Philo $philo: [$time] [$action] validate_fork()"
 	fi
@@ -63,6 +71,10 @@ validate_fork() {
 }
 
 validate_eating() {
+
+	if [[ $FLAG_END == true ]]; then
+		return
+	fi
 
 	if [[ $flag_debug == true ]]; then
 		echo "		🐞DEBUG: Philo $philo: [$time] [$action] validate_eating()"
@@ -81,6 +93,10 @@ validate_eating() {
 
 validate_sleeping() {
 
+	if [[ $FLAG_END == true ]]; then
+		return
+	fi
+
 	if [[ $flag_debug == true ]]; then
 		echo "		🐞DEBUG: Philo $philo: [$time] [$action] validate_sleeping()"
 	fi
@@ -89,7 +105,8 @@ validate_sleeping() {
 		t_sleep_start=$time
 		if [[ $t_sleep_start -ne t_eat_end ]]; then
 			TEST_MSG="Philo $philo eating duration is wrong"
-			FAIL_FLAG=true
+			FLAG_FAIL=true
+			FLAG_END=true
 			return
 		fi
 		move_to_next_action
@@ -100,6 +117,10 @@ validate_sleeping() {
 
 validate_thinking() {
 
+	if [[ $FLAG_END == true ]]; then
+		return
+	fi
+
 	if [[ $flag_debug == true ]]; then
 		echo "		🐞DEBUG: Philo $philo: [$time] [$action] validate_thinking()"
 	fi
@@ -107,7 +128,8 @@ validate_thinking() {
 	t_sleep_end=$time
 		if [[ $t_sleep -ne $((t_sleep_end - t_sleep_start)) ]]; then
 			TEST_MSG="Philo $philo: Time to sleep is wrong"
-			FAIL_FLAG=true
+			FLAG_FAIL=true
+			FLAG_END=true
 			return
 		fi
 		move_to_next_action
@@ -123,7 +145,8 @@ validate_meals_eaten() {
 	fi
 	if [[ $meals_eaten -eq $meals_to_eat ]]; then
 		TEST_MSG="Philo $philo: Shouldn't eat more than $meals_to_eat times"
-		FAIL_FLAG=true
+		FLAG_FAIL=true
+		FLAG_END=true
 	fi
 }
 
@@ -144,10 +167,11 @@ validate_output_one_philo() {
 			validate_death
 		else
 			TEST_MSG="Philo 1: Didn't die"
-			FAIL_FLAG=true
+			FLAG_FAIL=true
 			break
 		fi
 	done	
+	FLAG_END=true
 }
 
 validate_output() {
@@ -165,6 +189,7 @@ validate_output() {
 
 		i=0
 		logs=()
+		FLAG_END=false
 
 		IFS=$'\n' read -rd '' -a logs <<< "${table[$philo]}"  # Read into array logs, split by newline
 
@@ -180,7 +205,7 @@ validate_output() {
 		t_sleep_end=0
 		meals_eaten=0
 
-		while [[ i -lt ${#logs[@]} && "$FAIL_FLAG" == "false" ]]; do
+		while [[ i -lt ${#logs[@]} && "$FLAG_END" == "false" ]]; do
 
 			# Has taken forks
 			validate_fork
@@ -222,17 +247,17 @@ is_invalid_input() {
 
 	if ! [[ $EXEC_MSG =~ [Ee]rror|[Ii]nvalid|[Ww]rong|[Uu]sage ]]; then
 		TEST_MSG="Your programm should print an error message when input is invalid!"
-		FAIL_FLAG=true
+		FLAG_FAIL=true
 	fi
 	
 	if [[ $EXEC_MSG =~ ^[0-9]+\ [0-9] ]]; then
-		FAIL_FLAG=true
+		FLAG_FAIL=true
 		EXEC_MSG=""
 		TEST_MSG="Your programm shouldn't run when input is invalid!"
 
 		if [[ -n $meals_to_eat && $meals_to_eat -eq 0 && 
 		! ($number_of_philos -ne 0 || $t_die -ne 0 || $t_eat -ne 0 || $t_sleep -ne 0) ]]; then
-			FAIL_FLAG=false; fi
+			FLAG_FAIL=false; fi
 	fi
 	return 0
 }

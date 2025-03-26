@@ -32,11 +32,11 @@ VALGRIND="valgrind $VALGRIND_FLAGS --log-file=$VALG_LOG"
 flag_valgrind=false
 flag_prompt=false
 flag_debug=false
-HELP_MSG="Usage: ./philotester.sh [-vph] [cases...]\n\nOptions:\n  -v\tRun with valgrind\n  -p\tPrompt for manual test\n  -h\tDisplay this help message\n"
-while getopts "vpd>h" flag; do
+HELP_MSG="Usage: ./philotester.sh [-vmh] [cases...]\n\nOptions:\n  -v\tRun with valgrind\n  -m\tManual mode\n  -h\tDisplay this help message\n"
+while getopts "vmdh" flag; do
 	case $flag in
 		v) flag_valgrind=true ;;
-		p) flag_prompt=true ;;
+		m) flag_prompt=true ;;
 		d) flag_debug=true ;;
 		h) echo -e "${HELP_MSG}" && exit 0 ;;
 		*) echo -e "Use -h for help"; exit 1 ;;
@@ -55,7 +55,7 @@ TOTAL=0
 FAILED=0
 EXEC_MSG=""
 TEST_MSG=""
-FAIL_FLAG=false
+FLAG_FAIL=false
 
 fill_table() {
 	time="$1"
@@ -70,12 +70,12 @@ fill_table() {
 
 	if ! [[ "$philo" =~ ^[0-9]+$ ]]; then
 		TEST_MSG="Invalid philosopher number: $philo (not a number)"
-		FAIL_FLAG=true
+		FLAG_FAIL=true
     	return
 	fi
 	if [[ "$philo" -lt 1 || "$philo" -gt "$max" ]]; then
 		TEST_MSG="Invalid philosopher number: $philo max: $max"
-		FAIL_FLAG=true
+		FLAG_FAIL=true
         return
     fi
     table["$philo"]+="$time $action"$'\n'
@@ -116,7 +116,7 @@ validate_test() {
 			fill_table "$time" "$philo" "$action" "$number_of_philos"
 		else
 			TEST_MSG="Unexpected output"
-			FAIL_FLAG=true
+			FLAG_FAIL=true
 			continue
     	fi
 	done < "$log_file"
@@ -125,6 +125,32 @@ validate_test() {
 	validate_output "$number_of_philos" "$t_die" "$t_eat" "$t_sleep" "$meals_to_eat" 
 	print_result
 	return
+}
+
+exec_program() {
+
+	test_case="$1"
+
+	log_file="${LOGS_PATH}/${case}_${test_number}.log"
+	LEAK_RES=""
+
+	# !RUN PROGRAMM!
+	if $flag_valgrind; then
+		output=$(timeout $T_LIMIT $VALGRIND $EXEC $test_case 2>&1)
+		status=$?
+		if [[ $status -eq 124 ]]; then
+			TEST_MSG="Timeout"; fi
+		if grep -q "definitely lost:" "$VALG_LOG"; then
+			LEAK_RES=$LEAK; fi
+	else
+		output=$(timeout $T_LIMIT $EXEC $test_case 2>&1); fi
+		status=$?
+		if [[ $status -eq 124 ]]; then
+			TEST_MSG="Timeout"; fi
+	validate_test "$output" "$log_file" "$test_case"
+
+	unset table
+	((TOTAL++))
 }
 
 run_tests() {
@@ -136,34 +162,33 @@ run_tests() {
     while IFS= read -r test_case || [[ -n "$test_case" ]]; do
         [[ -z "$test_case" ]] && continue
 
-        log_file="${LOGS_PATH}/${case}_${test_number}.log"
-		LEAK_RES=""
-
-		# !RUN PROGRAMM!
-        if $flag_valgrind; then
-			output=$(timeout $T_LIMIT $VALGRIND $EXEC $test_case 2>&1)
-			status=$?
-			if [[ $status -eq 124 ]]; then
-				TEST_MSG="Timeout"; fi
-			if grep -q "definitely lost:" "$VALG_LOG"; then
-				LEAK_RES=$LEAK; fi
-        else
-            output=$(timeout $T_LIMIT $EXEC $test_case 2>&1); fi
-			status=$?
-			if [[ $status -eq 124 ]]; then
-				TEST_MSG="Timeout"; fi
-
-		validate_test "$output" "$log_file" "$test_case"
-
-		unset table
-        ((TOTAL++))
+		exec_program "$test_case" "$test_number"
 		((test_number++))
+
     done < "$test_file"
 }
 
 # RUN
 run_cases() {
 	# loop through case files
+	if [[ $flag_prompt == true ]]; then
+		prompt=""
+		terminate="e|exit"
+		test_number=1
+		echo -e "${MANUAL_TEST_EMOJI}${MANUAL_TEST} Manual test mode. Input exit or e to finish testing${RESET}"
+		while ! [[ $prompt =~ $terminate ]]; do
+			read -p "${}[$test_number] > " prompt
+			if [[ $prompt =~ $terminate ]]; then
+				echo -e "${MANUAL_TEST_EMOJI}${MANUAL_TEST} Exiting manual test mode${RESET}"
+				return; fi
+	
+			exec_program "$prompt" "$test_number"
+			((test_number++))
+		done
+		return
+	fi
+
+
 	for case in ${cases[@]}; do
 		echo -e "${HEADER_EMOJI}${HEADER_COLOR} Testing: ${case}${RESET}"
 		if [[ ! -f "${CASES_PATH}/$case" ]]; then
