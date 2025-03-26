@@ -16,14 +16,14 @@ exec_program() {
 		output=$(timeout $T_LIMIT $VALGRIND $EXEC $test_case 2>&1)
 		status=$?
 		if [[ $status -eq 124 ]]; then
-			TEST_MSG="Timeout"; fi
+			F_TIMEOUT=true; fi
 		if grep -q "definitely lost:" "$VALG_LOG"; then
 			LEAK_RES=$LEAK; fi
 	else
 		output=$(timeout $T_LIMIT $EXEC $test_case 2>&1); fi
 		status=$?
 		if [[ $status -eq 124 ]]; then
-			TEST_MSG="Timeout"; fi
+			F_TIMEOUT=true; fi
 
 	validate_test "$output" "$log_file" "$test_case"
 

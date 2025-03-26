@@ -43,8 +43,11 @@ parse_output() {
 			action="$rest"
 			fill_table "$time" "$philo" "$action" "$number_of_philos"
 		else
-			TEST_MSG="Unexpected output"
-			F_FAIL=true
+			if [[ $F_TIMEOUT == false ]]; then
+				TEST_MSG="Pase error: Invalid program output: $first $second $rest"
+				F_FAIL=true
+				break
+			fi
 			continue
 		fi
 	done < "$log_file"
@@ -60,5 +63,4 @@ parse_input(){
 	t_sleep="$(echo "$test_case" | cut -d " " -f 4)"
 	meals_to_eat="$(echo "$test_case" | cut -d " " -f 5)"
 	extra_arg="$(echo "$test_case" | cut -d " " -f 6)"
-
 }

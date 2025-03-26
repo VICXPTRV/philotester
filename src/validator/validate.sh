@@ -2,13 +2,20 @@
 
 source utils/style.sh
 
+stop_validation() {
+
+	TEST_MSG="Unexpected $action by $philo at $time while death was at $T_DEATH_TIME"
+	F_FAIL=true
+	F_PHILO_LOG_END=true
+}
+
 validate_last_action() {
 	if [[ $F_DEBUG == true ]]; then
 		echo "		🐞DEBUG: Philo $philo: [$time] [$action] last_action()"; fi
 	
 	if [[ $action =~ die ]]; then
 		validate_death
-	elif is_later_than_death "$time"; then
+	elif is_death_time "$time"; then
 			TEST_MSG="Unexpected $action by $philo at $time while death was at $T_DEATH_TIME"
 	fi
 	F_PHILO_LOG_END=true
@@ -26,7 +33,6 @@ move_to_next_action() {
 
 	if [[ $F_DEBUG == true ]]; then
 		echo "		🐞DEBUG: Philo $philo: [$time] [$action] move_to_next_action()"; fi
-
 }
 
 validate() {
@@ -38,18 +44,12 @@ validate() {
 
 	if [[ $F_DEBUG == true ]]; then
 			echo -e "\n🐞DEBUG VALIDATION, F_FAIL $F_FAIL"; fi
-	
     for ((philo=1; philo<=number_of_philos; philo++)); do
-
 		if [[ $F_FAIL == true ]]; then
-			break
-		fi
-
+			break; fi
 		i=0
 		logs=()
-
 		IFS=$'\n' read -rd '' -a logs <<< "${table[$philo]}"  # Read into array logs, split by newline
-
 		time="${logs[i]%% *}" # before space
 		action="${logs[i]#* }" # after the space
 
@@ -57,8 +57,7 @@ validate() {
 			while [[ i -lt ${#logs[@]} ]]; do
 				echo "	🐞DEBUG: LOGS: $philo: ${logs[i]}"
 				((i++))
-			done
-		fi
+			done; fi
 
 		t_eat_end=$time
 		t_eat_start=0
@@ -68,6 +67,10 @@ validate() {
 		F_PHILO_LOG_END=false
 		i=0
 		while (( i < ${#logs[@]} )) && [[ "$F_PHILO_LOG_END" == false ]]; do
+
+			if is_death_time "$time" ; then
+				validate_death
+				break; fi
 			validate_fork # Has taken forks
 			validate_fork # Has taken forks
 			validate_eating # Is eating

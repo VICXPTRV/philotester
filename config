@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# EXEC_PATH="../../thread_mutex"			#<------ YOUR PATH
-EXEC_PATH="../repos/testcode/philo"			#<------ YOUR PATH
-VALGRIND_FLAGS="--tool=helgrind"				#<------ YOUR FLAGS
-T_LIMIT=30									#<------ YOUR TIMEOUT IN SECONDS
+EXEC_PATH="../../thread_mutex"				#<------ YOUR PATH
+# EXEC_PATH="../repos/testcode/philo"		#<------ YOUR PATH
+VALGRIND_FLAGS="--tool=helgrind"			#<------ YOUR FLAGS
+T_LIMIT=10 									#<------ YOUR TIMEOUT IN SECONDS
 T_DELAY_TOLERANCE=10						#<------ YOUR DELAY TOLERANCE IN MILLISECONDS, MUST BE ZERO						
