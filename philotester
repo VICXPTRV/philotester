@@ -176,9 +176,9 @@ run_cases() {
 	# loop through case files
 	if [[ $flag_prompt == true ]]; then
 		prompt=""
-		terminate="e|exit"
+		terminate="^(q|quit)$"
 		test_number=1
-		echo -e "${MANUAL_TEST_EMOJI}${MANUAL_TEST_COLOR} Enter manual test mode ${ADD_COLOR}(exit or e to finish)\n${RESET}"
+		echo -e "${MANUAL_TEST_EMOJI}${MANUAL_TEST_COLOR} Enter manual test mode ${ADD_COLOR}(quit or q to finish)\n${RESET}"
 		while ! [[ $prompt =~ $terminate ]]; do
 			read -p "> " prompt
 			if [[ $prompt =~ $terminate ]]; then
