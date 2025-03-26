@@ -38,7 +38,7 @@ parse_output() {
 			TEST_MSG="Segmentation fault"
 			continue
 		elif [[ "$first" =~ ^[0-9]+$ && "$second" =~ ^[0-9]+$ ]]; then
-			time="$first"
+			time=$((10#$first))
 			philo="$second"
 			action="$rest"
 			fill_table "$time" "$philo" "$action" "$number_of_philos"
