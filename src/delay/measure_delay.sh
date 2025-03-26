@@ -78,7 +78,7 @@ measure_system_delay() {
     echo -e "${avg_color}[1] Average delay: ${avg_delay}ms"
     echo -e "${peak_color}[2] Peak delay: ${peak_delay}ms"
 
-    if (( $(echo "$avg_delay > 10" | bc -l) )); then
+    if (( $(echo "$peak_delay > 10" | bc -l) )); then
         echo -e "${WARNING} ${YELLOW} Your machine delay is more than 10ms ${RESET}"
         sleep 5
     fi

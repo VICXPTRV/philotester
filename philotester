@@ -1,12 +1,32 @@
 #!/bin/bash
 
 source config
-source utils/measure_delay.sh
-source utils/check_integers.sh
+# SRC
+source src/run.sh
+source src/build/build_and_norm.sh
+source src/delay/measure_delay.sh
+source src/printer/printers.sh
+source src/validator/validate.sh
+source src/validator/parse.sh
+source src/validator/act_eat.sh
+source src/validator/act_sleep.sh
+source src/validator/act_think.sh
+source src/validator/act_death.sh
+source src/validator/act_fork.sh
+
+# UTILS
 source utils/style.sh
-source utils/printers.sh
-source utils/build_and_norm.sh
-source utils/validate_output.sh
+source utils/check_integers.sh
+
+# GLOBALS
+TOTAL=0
+FAILED=0
+EXEC_MSG=""
+TEST_MSG=""
+FLAG_FAIL=false
+FLAG_END=false
+T_DEATH_TIME=-1
+T_DELAY_TOLERANCE_DEATH=10 # ms by subject requirements
 
 # PATH
 EXEC="${EXEC_PATH}/philo"
@@ -30,13 +50,13 @@ VALGRIND="valgrind $VALGRIND_FLAGS --log-file=$VALG_LOG"
 
 # FLAGS
 flag_valgrind=false
-flag_prompt=false
+flag_manual=false
 flag_debug=false
 HELP_MSG="Usage: ./philotester.sh [-vmh] [cases...]\n\nOptions:\n  -v\tRun with valgrind\n  -m\tManual mode\n  -h\tDisplay this help message\n"
 while getopts "vmdh" flag; do
 	case $flag in
 		v) flag_valgrind=true ;;
-		m) flag_prompt=true ;;
+		m) flag_manual=true ;;
 		d) flag_debug=true ;;
 		h) echo -e "${HELP_MSG}" && exit 0 ;;
 		*) echo -e "Use -h for help"; exit 1 ;;
@@ -50,162 +70,10 @@ if [[ $# -gt 0 ]]; then
 else
 	cases=($(ls $CASES_PATH)); fi
 
-# GLOBALS
-TOTAL=0
-FAILED=0
-EXEC_MSG=""
-TEST_MSG=""
-FLAG_FAIL=false
-
-fill_table() {
-	time="$1"
-	philo="$2"
-	action="$3"
-	max="$4"
-
-	declare -gA table
-
-	# Initialize if not set
-	[[ -z "${table[$philo]}" ]] && table["$philo"]=""
-
-	if ! [[ "$philo" =~ ^[0-9]+$ ]]; then
-		TEST_MSG="Invalid philosopher number: $philo (not a number)"
-		FLAG_FAIL=true
-    	return
-	fi
-	if [[ "$philo" -lt 1 || "$philo" -gt "$max" ]]; then
-		TEST_MSG="Invalid philosopher number: $philo max: $max"
-		FLAG_FAIL=true
-        return
-    fi
-    table["$philo"]+="$time $action"$'\n'
-}
-
-validate_test() {
-	output="$1"
-    log_file="$2"
-	test_case="$3"
-
-	# Log the output
-	echo -e "${output}" > "$log_file"
-
-	# Get program input
-	number_of_philos=$(echo "$test_case" | cut -d " " -f 1)
-	t_die="$(echo "$test_case" | cut -d " " -f 2)"
-	t_eat="$(echo "$test_case" | cut -d " " -f 3)"
-	t_sleep="$(echo "$test_case" | cut -d " " -f 4)"
-	meals_to_eat="$(echo "$test_case" | cut -d " " -f 5)"
-	extra_arg="$(echo "$test_case" | cut -d " " -f 6)"
-
-	# Check for invalid input and stop further processing
-	if is_invalid_input "$number_of_philos" "$t_die" "$t_eat" "$t_sleep" "$meals_to_eat" "$extra_arg"; then
-		print_result
-		return
-	fi
-
-	# Parse output
-	while IFS=" " read -r first second rest; do
-		TEST_MSG=""
-		if echo "$first $second $rest" | grep -q "segmentation"; then
-			TEST_MSG="Segmentation fault"
-			continue
-		elif [[ "$first" =~ ^[0-9]+$ && "$second" =~ ^[0-9]+$ ]]; then
-			time="$first"
-			philo="$second"
-			action="$rest"
-			fill_table "$time" "$philo" "$action" "$number_of_philos"
-		else
-			TEST_MSG="Unexpected output"
-			FLAG_FAIL=true
-			continue
-    	fi
-	done < "$log_file"
-
-	# Handle output
-	validate_output "$number_of_philos" "$t_die" "$t_eat" "$t_sleep" "$meals_to_eat" 
-	print_result
-	return
-}
-
-exec_program() {
-
-	test_case="$1"
-	test_number="$2"
-	test_name="$3"
-
-	log_file="${test_name}_${test_number}.log"
-	LEAK_RES=""
-
-	# !RUN PROGRAMM!
-	if $flag_valgrind; then
-		output=$(timeout $T_LIMIT $VALGRIND $EXEC $test_case 2>&1)
-		status=$?
-		if [[ $status -eq 124 ]]; then
-			TEST_MSG="Timeout"; fi
-		if grep -q "definitely lost:" "$VALG_LOG"; then
-			LEAK_RES=$LEAK; fi
-	else
-		output=$(timeout $T_LIMIT $EXEC $test_case 2>&1); fi
-		status=$?
-		if [[ $status -eq 124 ]]; then
-			TEST_MSG="Timeout"; fi
-
-	validate_test "$output" "$log_file" "$test_case"
-
-	unset table
-	((TOTAL++))
-}
-
-run_tests() {
-    case="$1"
-    test_file="${CASES_PATH}/${case}"
-    test_number=1
-
-	# Run each test in current case file
-    while IFS= read -r test_case || [[ -n "$test_case" ]]; do
-        [[ -z "$test_case" ]] && continue
-
-		exec_program "$test_case" "$test_number" "${LOGS_PATH}/${case}"
-		((test_number++))
-
-    done < "$test_file"
-}
-
-# RUN
-run_cases() {
-	# loop through case files
-	if [[ $flag_prompt == true ]]; then
-		prompt=""
-		terminate="^(q|quit)$"
-		test_number=1
-		echo -e "${MANUAL_TEST_EMOJI}${MANUAL_TEST_COLOR} Enter manual test mode ${ADD_COLOR}(quit or q to finish)\n${RESET}"
-		while ! [[ $prompt =~ $terminate ]]; do
-			read -p "> " prompt
-			if [[ $prompt =~ $terminate ]]; then
-				echo -e "${MANUAL_TEST_COLOR}...Exiting manual test mode${RESET}\n"
-				return; fi
-	
-			exec_program "$prompt" "$test_number" "${LOGS_PATH}/manual"
-			((test_number++))
-		done
-		return
-	fi
-
-
-	for case in ${cases[@]}; do
-		echo -e "${HEADER_EMOJI}${HEADER_COLOR} Testing: ${case}${RESET}"
-		if [[ ! -f "${CASES_PATH}/$case" ]]; then
-			echo -e "${KO_COLOR}$ Test file not found: ${case}${RESET}"
-			return
-		fi
-		run_tests "${case}"
-		echo -e "\n"
-	done
-}
 
 # RUN SCRIPT
 print_header
-measure_system_delay
+# measure_system_delay
 check_norm
 build_program
 run_cases
