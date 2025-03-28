@@ -3,23 +3,21 @@
 source utils/style.sh
 
 validate_thinking() {
+	if [[ $F_DEBUG == true ]]; then		
+		echo "		🐞DEBUG: Philo $philo: [$time] [$action] validate_thinking(), t_death: $T_DEATH"; fi
 
-	if [[ $F_PHILO_LOG_END == true ]]; then
-		return
-	fi
+	if [[ $F_PHILO_LOG_END == true || $T_DEATH -gt -1 ]]; then
+		return; fi
 
-	if [[ $F_DEBUG == true ]]; then
-		echo "		🐞DEBUG: Philo $philo: [$time] [$action] validate_thinking()"
-	fi
-	if [[ $action =~ think ]] && is_alive  "$t_die" ; then
-		t_sleep_end=$time
-		if [[ $t_sleep -ne $((t_sleep_end - t_sleep_start)) ]]; then
-			TEST_MSG="Philo $philo: Time to sleep is wrong"
-			F_FAIL=true
-			F_PHILO_LOG_END=true
-			return; fi
+	is_death_time "$time" && return
+
+	if [[ $action =~ think ]]; then
+		if [[ $(($time - $T_SLEEP_END)) -gt $T_DELAY_TOLERANCE || $(($time - $T_SLEEP_END)) -lt 0 ]]; then
+			unexpected_action "Sleeping time error"
+			return
+		fi
 		move_to_next_action
 	else
-		validate_last_action
+		unexpected_action "Enexpected action, expect think"
 	fi
 }

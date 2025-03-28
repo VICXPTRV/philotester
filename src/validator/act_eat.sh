@@ -3,24 +3,20 @@
 source utils/style.sh
 
 validate_eating() {
+	if [[ $F_DEBUG == true ]]; then
+		echo "		🐞DEBUG: Philo $philo: [$time] [$action] validate_eating()"; fi
 
 	if [[ $F_PHILO_LOG_END == true ]]; then
-		return
-	fi
+		return; fi
 
-	if [[ $F_DEBUG == true ]]; then
-		echo "		🐞DEBUG: Philo $philo: [$time] [$action] validate_eating()"
-	fi
+	is_death_time "$time" && return
 
-	if [[ $action =~ eat ]] && is_alive "$T_LAST_MEAL" "$t_die" ; then
-		t_eat_start=$time
+	if [[ $action =~ eat ]]; then
+		T_LAST_MEAL=$(($time + $t_eat))		
 		((meals_eaten++))
-		T_LAST_MEAL=$(($t_eat_start + $t_eat))		
 		move_to_next_action
 	else
-		validate_last_action
-	fi
-
+		unexpected_action "Unexpected action, expect eat" ; fi
 }
 
 validate_meals_eaten() {
@@ -34,3 +30,4 @@ validate_meals_eaten() {
 		F_PHILO_LOG_END=true
 	fi
 }
+code 

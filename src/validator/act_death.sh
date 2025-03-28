@@ -2,43 +2,29 @@
 
 source utils/style.sh
 
-validate_death() {
-
-	if [[ $F_DEBUG == true ]]; then
-		echo "		🐞DEBUG: time: $time, T_LAST_MEAL: $T_LAST_MEAL, t_die: $t_die"; fi
-
-	if is_death_time "$time" && [[ $action =~ death ]]; then
-		if [[ $T_DEATH_TIME -gt 0 ]]; then
-			TEST_MSG="Program continues after first death $T_DEATH_TIME, $philo $time $action"
-		elif [[ $F_TIMEOUT == true ]]; then
-			TEST_MSG="Timeout after $T_TIMEOUT, no one died"
-		fi
-
-	elif (($time - ($T_LAST_MEAL + $t_die) > $T_DELAY_TOLERANCE_DEATH)); then
-		TEST_MSG="Philo $philo died too late"
-		F_FAIL=true
-	fi
-
-	F_PHILO_LOG_END=true
-}
-
 is_death_time() {
 	t_current="$1"
 
-	if [[ $T_DEATH_TIME -gt 0 && $t_current -ge $T_DEATH_TIME ]]; then
+	if [[ $F_DEBUG == true ]]; then
+		echo "			🐞DEBUG: [$philo]: cur:$t_current meal:$T_LAST_MEAL die:$t_die is_death_time()"; fi
+
+	if [[ $((t_current - T_LAST_MEAL)) -gt $((t_die + T_DELAY_TOLERANCE_DEATH)) ]]; then
+		validate_death
 		return 0
 	fi
 	return 1
 }
 
-is_alive() {
-	t_die="$1"
+validate_death() {
+	if [[ $F_DEBUG == true ]]; then
+		echo "		🐞DEBUG: T_DEATH: $time by [$philo] [$action] validate_death()"; fi
 
-	if [[ $time -gt $((T_LAST_MEAL + t_die)) ]]; then
-		if [[ $F_DEBUG == true ]]; then
-			echo "			🐞DEBUG: DEATH_TIME set to $time by $philo"; fi
-		DEATH_TIME=$time
-		return 1
+	T_DEATH=$time
+	set_programm_end "$T_DEATH"
+	move_to_next_action
+	if [[ $action =~ die ]]; then
+		F_FAIL=false
+	else
+		unexpected_action "Action after death"
 	fi
-	return 0
 }
