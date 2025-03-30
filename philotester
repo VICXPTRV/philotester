@@ -25,6 +25,7 @@ EXEC_MSG=""
 TEST_MSG=""
 F_FAIL=false
 F_TIMEOUT=false
+F_ANY_DEATH=false
 F_PHILO_LOG_END=false
 T_DEATH=-1
 T_LAST_MEAL=0

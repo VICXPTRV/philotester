@@ -34,8 +34,8 @@ set_programm_end() {
 
 validate() {
 	number_of_philos="$1"; t_die="$2"; t_eat="$3"; t_sleep="$4"; meals_to_eat="$5";
-	T_PROGRAM_END=-1
-	T_DEATH=-1
+	# Reset globals for new test
+	T_PROGRAM_END=-1; T_DEATH=-1; F_ANY_DEATH=false
 
 	# Declare array of all last meals for each philo
 	declare -gA arr_lastmeal
@@ -104,16 +104,17 @@ is_invalid_input() {
 	then
 		EXEC_MSG=""; return 1; fi
 
-	if ! [[ $EXEC_MSG =~ [Ee]rror|[Ii]nvalid|[Ww]rong|[Uu]sage ]]; then
+	if ! [[ $EXEC_MSG =~ [Ee]rror|[Ii]nvalid|[Ww]rong|[Uu]sage|[Tt]oo ]]; then
 		TEST_MSG="Your programm should print an error message when input is invalid!"
 		F_FAIL=true; fi
 	
 	if [[ $EXEC_MSG =~ ^[0-9]+\ [0-9] ]]; then
-		F_FAIL=true; EXEC_MSG=""; TEST_MSG="Your programm shouldn't run when input is invalid!"
+		F_FAIL=true; EXEC_MSG=""; TEST_MSG="Your programm shouldn't run when input is invalid!"; fi
 
-		if [[ -n $meals_to_eat && $meals_to_eat -eq 0 && 
-		! ($number_of_philos -ne 0 || $t_die -ne 0 || $t_eat -ne 0 || $t_sleep -ne 0) ]]; then
-			F_FAIL=false; fi
+	if [[ -n $meals_to_eat && $meals_to_eat -eq 0 ]]; then
+		TEST_MSG="Tester assumes that meals number should be greater than zero and won't check your output"; F_FAIL=false
+		if ! [[ $number_of_philos -ne 0 || $t_die -ne 0 || $t_eat -ne 0 || $t_sleep -ne 0 ]]; then
+			F_FAIL=true; fi
 	fi
 	return 0
 }

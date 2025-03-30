@@ -34,7 +34,14 @@ print_result(){
 	fi
 
 	if [[ $F_TIMEOUT == true ]]; then
-		timeout_warning="Results can be affected by timeout!"; fi
+		timeout_warning="Results can be affected by timeout!"
+		if [[ $F_ANY_DEATH == true ]]; then
+			timeout_warning+="${ADD_COLOR} *someone has died${RESET}"
+		else
+
+			timeout_warning+="${ADD_COLOR} *no deaths occurred${RESET}"
+		fi
+	fi
 	if [[ $F_FAIL == true ]]; then
 		color=$KO_COLOR
 		((FAILED++)); fi
@@ -44,8 +51,7 @@ print_result(){
 	echo -e "${color}[$test_number]${TEST_EMOJI}${LEAK_RES}./philo ${test_case}${ADD_COLOR} ${EXEC_MSG}${RESET}${WARNING_COLOR} $timeout_warning ${RESET}"
 
 	if [[ -n "$TEST_MSG" ]]; then
-		echo -e "\n${WARNING_COLOR}   $TEST_MSG${RESET}"
-	fi
+		echo -e "${WARNING_COLOR}   $TEST_MSG${RESET}";fi
 
 	EXEC_MSG=""
 	TEST_MSG=""

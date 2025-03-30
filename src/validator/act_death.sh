@@ -16,6 +16,8 @@ validate_death() {
 	if [[ $F_DEBUG == true ]]; then
 		echo -e "\n🐞DEBUG: DEATH [$time] [$philo] [$action] validate_death()"; fi
 
+	F_ANY_DEATH=true
+
 	[[ $T_DEATH -eq -1 ]] && T_DEATH=$time && ( [[ $F_DEBUG == true ]] && echo "⚠️  SET T_DEATH=$time" )
 	if [[ $time -lt $T_DEATH ]]; then
 		T_DEATH=$time && [[ $F_DEBUG == true ]] && echo "⚠️  SET T_DEATH=$time"
@@ -35,7 +37,7 @@ validate_death() {
 check_missed_death() { 
 	if [[ $F_DEBUG == true ]]; then
 		echo "🐞DEBUG: check_missed_death()"
-		echo "		T_PROGRAM_END=$T_PROGRAM_END T_DEATH=$T_DEATH F_"; fi
+		echo "		T_PROGRAM_END=$T_PROGRAM_END T_DEATH=$T_DEATH"; fi
 
 	local t_die="$1"
     for ((philo=1; philo<=number_of_philos; philo++)); do
