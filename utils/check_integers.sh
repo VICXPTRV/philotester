@@ -40,3 +40,22 @@ is_int_valid() {
 	done
 	return 0 # All valid
 }
+
+is_int_more_than_sixty() {
+	t_die=$1
+	t_eat=$2
+	t_sleep=$3
+
+	if ! [[ $t_die =~ ^[0-9]+$ && $t_eat =~ ^[0-9]+$ && $t_sleep =~ ^[0-9]+$ ]]; then
+		return 0
+	fi
+
+	if [[ -z $t_die || -z $t_eat || -z $t_sleep ]]; then
+		return 0; fi
+
+	if [[ $t_die -lt 60 || $t_eat -lt 60 || $t_sleep -lt 60 ]]; then
+		return 1
+	fi
+	return 0
+}
+

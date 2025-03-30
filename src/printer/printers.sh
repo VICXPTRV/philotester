@@ -48,6 +48,9 @@ print_result(){
 	if [[ -n "$TEST_MSG" ]]; then
 		TEST_EMOJI="$WARNING"; fi
 
+	if [[ $F_CRUSH == true ]]; then
+		TEST_EMOJI="$CRUSH_EMOJI"; fi
+
 	echo -e "${color}[$test_number]${TEST_EMOJI}${LEAK_RES}./philo ${test_case}${ADD_COLOR} ${EXEC_MSG}${RESET}${WARNING_COLOR} $timeout_warning ${RESET}"
 
 	if [[ -n "$TEST_MSG" ]]; then

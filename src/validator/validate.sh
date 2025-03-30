@@ -94,6 +94,12 @@ is_invalid_input() {
 	extra_arg="$6"
 	EXEC_MSG=$(<"$log_file")
 
+	if ! is_int_more_than_sixty "$t_die" "$t_eat" "$t_sleep"; then
+		F_FAIL=false
+		TEST_MSG=""
+		EXEC_MSG=""
+		return 0; fi
+
 	if [[ -z "$extra_arg" ]] && \
 		( [[ -z "$meals_to_eat" ]] || 
 			( is_int_not_overflow "$meals_to_eat" && is_int_positive "$meals_to_eat" && is_int_valid "$meals_to_eat" ) 
@@ -104,12 +110,12 @@ is_invalid_input() {
 	then
 		EXEC_MSG=""; return 1; fi
 
-	if ! [[ $EXEC_MSG =~ [Ee]rror|[Ii]nvalid|[Ww]rong|[Uu]sage|[Tt]oo ]]; then
+	if ! [[ $EXEC_MSG =~ [Ee]rror|[Ii]nvalid|[Ww]rong|[Uu]sage|[Tt]oo|[Mm]ust|[Ii]ncorrect|[Vv]alid ]]; then
 		TEST_MSG="An error message was expected! "
-		F_TIMEOUT=false
 		F_FAIL=true
+		F_TIMEOUT=false
 	fi
-	
+
 	if [[ $EXEC_MSG =~ ^[0-9]+\ [0-9] ]]; then
 		F_FAIL=true
 		EXEC_MSG=""

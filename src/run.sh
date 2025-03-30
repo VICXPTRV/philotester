@@ -5,31 +5,32 @@ exec_program() {
 	test_case="$1"
 	test_number="$2"
 	test_name="$3"
+	F_CRUSH=false
 
 	[[ $F_DEBUG == true ]] && echo "🐞 EXEC TEST CASE: $test_case"
 
 	log_file="${test_name}_${test_number}.log"
+	file_name=$(basename "$log_file")
+	VALG_LOG="${VALG_PATH}/memcheck/${file_name}"
+	HELG_LOG="${VALG_PATH}/helgrind/${file_name}"
 	LEAK_RES=""
 	F_TIMEOUT=false
 
-	# !RUN PROGRAMM!
-
-	if [[ $F_DEBUG == true ]]; then
-		if $F_VALGRIND; then
-			echo "	Command: timeout $T_LIMIT $VALGRIND $EXEC $test_case"
-		else
-			echo "	Command: timeout $T_LIMIT $EXEC $test_case"
-        fi
-    fi
+	# !RUN PROGRAMM WITH VALGRIND!
 	if $F_VALGRIND; then
-		output=$(stdbuf -oL timeout timeout $T_LIMIT $VALGRIND $EXEC $test_case 2>&1)
+		# VALG
+		output=$(stdbuf -oL timeout $T_LIMIT $VALGRIND --log-file=${VALG_LOG} $EXEC $test_case 2>&1 | tr -d '\0')
 		status=$?
 		if [[ $status -eq 124 ]]; then
 			F_TIMEOUT=true; fi
-		if grep -q "definitely lost:" "$VALG_LOG"; then
-			LEAK_RES=$LEAK; fi
+		grep -q "definitely lost:" "$VALG_LOG" && LEAK_RES=$LEAK
+		# HELG
+		timeout $T_LIMIT $HELGRIND --log-file=${HELG_LOG} $EXEC $test_case 2>/dev/null
+		grep -q "data race:" "$HELG_LOG" && LEAK_RES+="$RACE"
+
+	# !RUN PROGRAMM WITHOUT VALGRIND!
 	else
-		output=$(stdbuf -oL timeout $T_LIMIT $EXEC $test_case 2>&1)
+		output=$(stdbuf -oL timeout $T_LIMIT $EXEC $test_case 2>&1 | tr -d '\0')
 		status=$?
 		if [[ $status -eq 124 ]]; then
 			F_TIMEOUT=true; fi

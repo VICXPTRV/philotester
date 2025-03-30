@@ -46,12 +46,11 @@ LOGS_PATH="logs"
 # VALGRIND
 VALG_PATH="valgrind"
 [[ ! -d "${VALG_PATH}" ]] && mkdir ${VALG_PATH}
-[[ ! -f "${VALG_PATH}/valgrind.log" ]] && touch ${VALG_PATH}/valgrind.log
+rm -f "${VALG_PATH}"/*
 [[ ! -f "${VALG_PATH}/valgrind.supp" ]] && touch "${VALG_PATH}/valgrind.supp"
-VALG_LOG=${VALG_PATH}/valgrind.log
 VALG_SUP=${VALG_PATH}/valgrind.supp
-VALGRIND="valgrind $VALGRIND_FLAGS --log-file=$VALG_LOG"
-> "$VALG_LOG"
+VALGRIND="valgrind $VALGRIND_FLAGS"
+HELGRIND="valgrind $HELGRIND_FLAGS"
 
 # FLAGS
 F_VALGRIND=false

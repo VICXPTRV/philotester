@@ -15,7 +15,7 @@ fill_table() {
     	return
 	fi
 	if [[ "$philo" -lt 1 || "$philo" -gt "$max" ]]; then
-		TEST_MSG="Invalid philosopher number: $philo max: $max"
+		TEST_MSG="Invalid philosopher number: $philo (min: 1 max: $max)"
 		F_FAIL=true
         return
     fi
@@ -30,8 +30,9 @@ parse_output() {
 
 	while IFS=" " read -r first second rest; do
 		TEST_MSG=""
-		if echo "$first $second $rest" | grep -q "segmentation"; then
+		if echo "$first $second $rest" | grep -q "segmentation" || echo "$first $second $rest" | grep -q "dumped core"; then
 			TEST_MSG="Segmentation fault"
+			F_CRUSH=true
 			continue
 		elif [[ "$first" =~ ^[0-9]+$ && "$second" =~ ^[0-9]+$ ]]; then
 			time=$((10#$first))
@@ -40,7 +41,7 @@ parse_output() {
 			fill_table "$time" "$philo" "$action" "$number_of_philos"
 		else
 			if [[ $F_TIMEOUT == false ]]; then
-				TEST_MSG="Pase error: Invalid program output: $first $second $rest"
+				TEST_MSG="Invalid program output: $first $second $rest"
 				F_FAIL=true
 				break
 			fi
