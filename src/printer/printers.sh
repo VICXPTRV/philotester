@@ -1,7 +1,5 @@
 #!/bin/bash
 
-source utils/style.sh
-
 print_tester_info() {
     echo -e "${INFO_EMOJI} ${INFO_COLOR}This tester helps catch regressions during development. Do not rely on results for final validation.${RESET}"
     echo -e "    ${INFO_COLOR}More info: ${UNDERLINE}https://github.com/VICXPTRV/philotester${RESET}"
@@ -29,21 +27,24 @@ print_result(){
 
 	TEST_EMOJI=""
 	color=$OK_COLOR
+	timeout_warning=""
 
 	if [[ $F_DEBUG == true ]]; then
 		echo "	🐞DEBUG: $TEST_MSG, $EXEC_MSG, $F_FAIL"
 	fi
 
+	if [[ $F_TIMEOUT == true ]]; then
+		timeout_warning="Results can be affected by timeout!"; fi
 	if [[ $F_FAIL == true ]]; then
 		color=$KO_COLOR
 		((FAILED++)); fi
 	if [[ -n "$TEST_MSG" ]]; then
 		TEST_EMOJI="$WARNING"; fi
 
-	echo -e "${color}[$test_number]${TEST_EMOJI}${LEAK_RES}./philo ${test_case}${ADD_COLOR} ${EXEC_MSG}${RESET}"
+	echo -e "${color}[$test_number]${TEST_EMOJI}${LEAK_RES}./philo ${test_case}${ADD_COLOR} ${EXEC_MSG}${RESET}${WARNING_COLOR} $timeout_warning ${RESET}"
 
 	if [[ -n "$TEST_MSG" ]]; then
-		echo -e "${WARNING_COLOR}    $TEST_MSG${RESET}"
+		echo -e "\n${WARNING_COLOR}   $TEST_MSG${RESET}"
 	fi
 
 	EXEC_MSG=""

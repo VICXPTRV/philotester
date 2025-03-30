@@ -1,7 +1,5 @@
 #!bin/bash
 
-source utils/style.sh
-
 fill_table() {
 	time="$1"
 	philo="$2"

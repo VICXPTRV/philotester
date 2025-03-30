@@ -1,7 +1,5 @@
 #!/bin/bash
 
-source utils/style.sh
-
 compile_usleep() {
 	echo '#include <unistd.h>
 #include <stdlib.h>

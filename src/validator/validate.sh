@@ -1,10 +1,8 @@
 #!/bin/bash
 
-source utils/style.sh
-
 unexpected_action() {
 	if [[ $F_DEBUG == true ]]; then
-		echo "		🐞DEBUG: Philo $philo: [$time] [$action] validate_last_action()"; fi
+		echo "⚠️  SET F_PHILO_LOG_END=true F_FAIL=true, unexpected_action()"; fi
 
 	err=$1
 	F_PHILO_LOG_END=true
@@ -23,31 +21,21 @@ move_to_next_action() {
 	action="${logs[i]#* }"
 
 	if [[ $F_DEBUG == true ]]; then
-		echo "		🐞DEBUG: Philo $philo: [$time] [$action] move_to_next_action()"; fi
-}
-
-check_missed_death() { 
-	if [[ $F_DEBUG == true ]]; then
-		echo "		🐞DEBUG: Philo $philo: [$time] [$action] die: $t_die end: $T_PROGRAM_END check_missed_death()"; fi
-
-	local t_die="$1"
-    for ((philo=1; philo<=number_of_philos; philo++)); do
-        if [[ $(( ${arr_lastmeal["$philo"]} + $t_die )) -lt $T_PROGRAM_END ]]; then
-            TEST_MSG="Philo $philo must die at $(( ${arr_lastmeal["$philo"]} + $t_die ))!"
-            F_FAIL=true
-            break
-        fi
-    done
+		echo "➡️  MOVED to [$time] [$philo] [$action] move_to_next_action()"; fi
 }
 
 set_programm_end() {
 	time="$1"
 	if [[ $time -gt $T_PROGRAM_END ]]; then
+		if [[ $F_DEBUG == true ]]; then
+			echo "⚠️  SET T_PROGRAM_END=$time"; fi
 		T_PROGRAM_END=$time; fi
 }
 
 validate() {
 	number_of_philos="$1"; t_die="$2"; t_eat="$3"; t_sleep="$4"; meals_to_eat="$5";
+	T_PROGRAM_END=-1
+	T_DEATH=-1
 
 	# Declare array of all last meals for each philo
 	declare -gA arr_lastmeal
@@ -63,37 +51,37 @@ validate() {
 		IFS=$'\n' read -rd '' -a logs <<< "${table[$philo]}"  # Read into array logs, split by newline
 		time="${logs[i]%% *}"
 		action="${logs[i]#* }"
-		set_programm_end "$time"
 
 		if [[ $F_DEBUG == true ]]; then
 			while [[ i -lt ${#logs[@]} ]]; do
-				echo "	🐞DEBUG: LOGS: $philo: ${logs[i]}"
+				echo "	LOGS: $philo: ${logs[i]}"
 				((i++))
 			done; fi
 
-		t_sleep_end=0; meals_eaten=0
-		F_PHILO_LOG_END=false; i=0;
-		while (( i < ${#logs[@]} )) ; do
+		F_PHILO_LOG_END=false;
+		meals_eaten=0; i=0;
+		if [[ $number_of_philos -eq 1 ]]; then
+			validate_fork
+			validate_death
+		fi
 
-			if is_death_time "$time" ; then
-				validate_death
-				break; fi
-			validate_fork # Has taken forks
-			validate_fork # Has taken forks
-			validate_eating # Is eating
-			validate_sleeping # Is sleeping
-			validate_thinking # Is thinking
+		while (( i < ${#logs[@]} )) ; do
+			validate_fork
+			validate_fork
+			validate_eating
+			validate_sleeping
+			validate_thinking
 
 			if [[ $F_PHILO_LOG_END == true ]]; then
 				arr_lastmeal[$philo]=$T_LAST_MEAL
 				break; fi
 		done
 
+		validate_meals_eaten
+		check_missed_death "$t_die"
+	
 		if [[ $F_DEBUG == true ]]; then
 			echo -e "\n"; fi
-
-		check_missed_death "$t_die"
-		validate_meals_eaten
 	done
 }
 

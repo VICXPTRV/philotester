@@ -1,7 +1,5 @@
 #!/bin/bash
 
-source utils/style.sh
-
 # NORM (optional)
 check_norm() {
 	echo -e "${HEADER_EMOJI}${HEADER_COLOR} Testing: build and norm${RESET}"

@@ -1,7 +1,5 @@
 #!bin/bash
 
-source utils/style.sh
-
 exec_program() {
 
 	test_case="$1"
