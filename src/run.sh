@@ -6,23 +6,35 @@ exec_program() {
 	test_number="$2"
 	test_name="$3"
 
+	[[ $F_DEBUG == true ]] && echo "🐞 EXEC TEST CASE: $test_case"
+
 	log_file="${test_name}_${test_number}.log"
 	LEAK_RES=""
+	F_TIMEOUT=false
 
 	# !RUN PROGRAMM!
+
+	if [[ $F_DEBUG == true ]]; then
+		if $F_VALGRIND; then
+			echo "	Command: timeout $T_LIMIT $VALGRIND $EXEC $test_case"
+		else
+			echo "	Command: timeout $T_LIMIT $EXEC $test_case"
+        fi
+    fi
 	if $F_VALGRIND; then
-		output=$(timeout $T_LIMIT $VALGRIND $EXEC $test_case 2>&1)
+		output=$(stdbuf -oL timeout timeout $T_LIMIT $VALGRIND $EXEC $test_case 2>&1)
 		status=$?
 		if [[ $status -eq 124 ]]; then
 			F_TIMEOUT=true; fi
 		if grep -q "definitely lost:" "$VALG_LOG"; then
 			LEAK_RES=$LEAK; fi
 	else
-		output=$(timeout $T_LIMIT $EXEC $test_case 2>&1); fi
+		output=$(stdbuf -oL timeout $T_LIMIT $EXEC $test_case 2>&1)
 		status=$?
 		if [[ $status -eq 124 ]]; then
 			F_TIMEOUT=true; fi
-
+	fi
+	[[ $F_DEBUG == true ]] && echo "	Output: $output"
 	validate_test "$output" "$log_file" "$test_case"
 
 	unset table
@@ -47,8 +59,11 @@ run_tests() {
 # RUN
 run_cases() {
 
+	[[ $F_DEBUG == true ]] && echo "🐞 RUN"
+
 	# Manual test mode
 	if [[ $F_MANUAL == true ]]; then
+		[[ $F_DEBUG == true ]] && echo "RUN MANUAL"
 		prompt=""
 		terminate="^(q|quit)$"
 		test_number=1
@@ -65,6 +80,7 @@ run_cases() {
 		return
 	fi
 
+	[[ $F_DEBUG == true ]] && echo "RUN AUTO"
 	# loop through case files
 	for case in ${cases[@]}; do
 		echo -e "${HEADER_EMOJI}${HEADER_COLOR} Testing: ${case}${RESET}"
