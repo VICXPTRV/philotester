@@ -1,5 +1,4 @@
 # Philotester 🥢
-<img src="sample.png" alt="Test Example" height="500">
 
 > [!WARNING]
 > This may be buggy. Do not fully trust the results. Always check the logs for verification.
@@ -40,6 +39,9 @@ cd philotester
 - `-p`    Prompt manual input
 - `-H`    Display help message
 - `-d`	  Debug tester itself
+
+**Tester**
+<img src="sample.png" alt="Test Example" height="500">
 
 ## Adding New Test Cases
 
