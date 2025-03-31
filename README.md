@@ -14,7 +14,7 @@ A testing suite for the Dining Philosophers project
 - **Test Cases**: Predefined scenarios in the `cases/` directory
 - **Performance**: Measures system performance
 
-[Test Example](sample.png)
+<img src="sample.png" alt="Test Example" height="300">
 
 ## Installation
 
