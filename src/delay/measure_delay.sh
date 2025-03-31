@@ -68,7 +68,7 @@ measure_system_delay() {
 		avg_color=$WARNING_COLOR
 	fi
 
-	if (( $(echo "$peak_delay > 10" | bc -l) )); then
+	if (( $(echo "$peak_delay > 6" | bc -l) )); then
 		peak_color=$WARNING_COLOR
 	fi
 

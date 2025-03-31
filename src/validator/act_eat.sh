@@ -14,7 +14,7 @@ validate_eating() {
 	if ! [[ $action =~ eat ]]; then
 		unexpected_action "Unexpected action, expect eat"; return; fi
 
-	T_LAST_MEAL=$time	
+	arr_lastmeal["$philo"]=$time && [[ $F_DEBUG == true ]] && echo "	⚠️  SET last_meal=$time"
 	((meals_eaten++))
 	move_to_next_action
 }
@@ -36,4 +36,3 @@ validate_meals_eaten() {
 		F_FAIL=true
 	fi
 }
-code 

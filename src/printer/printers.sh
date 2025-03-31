@@ -24,9 +24,7 @@ print_header() {
 # MODE
 
 print_mode() {
-
 	echo -e "${MANUAL_TEST_COLOR}${MODE_MESSAGE}\n${RESET}"
-
 }
 
 
@@ -35,19 +33,20 @@ print_result(){
 
 	TEST_EMOJI=""
 	color=$OK_COLOR
-	timeout_warning=""
+	death_warning=""
 
 	if [[ $F_DEBUG == true ]]; then
 		echo "	🐞DEBUG: $TEST_MSG, $EXEC_MSG, $F_FAIL"
 	fi
 
-	if [[ $F_TIMEOUT == true ]]; then
-		timeout_warning="Results can be affected by timeout!"
-		if [[ $F_ANY_DEATH == true ]]; then
-			timeout_warning+="${ADD_COLOR} *someone has died${RESET}"
-		else
-
-			timeout_warning+="${ADD_COLOR} *no deaths occurred${RESET}"
+	if [[ $F_TIMEOUT == true || $F_ANY_DEATH=true ]]; then
+		if $F_TIMEOUT; then
+			death_warning="Results can be affected by timeout!"; fi
+		
+		if [[ $F_ANY_DEATH == true && $F_NO_RUN == false ]]; then
+			death_warning+="${ADD_COLOR} *someone has died at [$first_death] ${RESET}"
+		elif [[ $F_ANY_DEATH == false && $F_NO_RUN == false ]]; then
+			death_warning+="${ADD_COLOR} *no deaths occurred${RESET}"
 		fi
 	fi
 	if [[ $F_FAIL == true ]]; then
@@ -59,7 +58,7 @@ print_result(){
 	if [[ $F_CRUSH == true ]]; then
 		TEST_EMOJI="$CRUSH_EMOJI"; fi
 
-	echo -e "${color}[$test_number]${TEST_EMOJI}${CHECK_RES}./philo ${test_case}${ADD_COLOR} ${EXEC_MSG}${RESET}${WARNING_COLOR} $timeout_warning ${RESET}"
+	echo -e "${color}[$test_number]${TEST_EMOJI}${CHECK_RES}./philo ${test_case}${ADD_COLOR} ${EXEC_MSG}${RESET}${WARNING_COLOR} $death_warning ${RESET}"
 
 	if [[ -n "$TEST_MSG" ]]; then
 		echo -e "${WARNING_COLOR}   $TEST_MSG${RESET}";fi

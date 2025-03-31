@@ -3,7 +3,7 @@
 validate_fork() {
 
 	if [[ $F_DEBUG == true ]]; then		
-		echo -e "\n🐞DEBUG: FORK [$time] [$philo] [$action], T_DEATH=$T_DEATH"; fi
+		echo -e "🐞DEBUG: FORK [$time] [$philo] [$action], T_DEATH=$T_DEATH"; fi
 
 	if [[ $F_PHILO_LOG_END == true ]]; then
 		return; fi

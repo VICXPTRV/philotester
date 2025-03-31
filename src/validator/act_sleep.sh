@@ -2,7 +2,7 @@
 
 validate_sleeping() {
 	if [[ $F_DEBUG == true ]]; then
-		echo "	🐞DEBUG: SLEEP [$time] [$philo] [$action] last_meal[$T_LAST_MEAL] validate_sleeping()"; fi
+		echo "🐞DEBUG: SLEEP [$time] [$philo] [$action] last_meal[$T_LAST_MEAL] validate_sleeping()"; fi
 
 	if [[ $F_PHILO_LOG_END == true ]]; then
 		return; fi

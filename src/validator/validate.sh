@@ -2,7 +2,7 @@
 
 unexpected_action() {
 	if [[ $F_DEBUG == true ]]; then
-		echo "⚠️  SET F_PHILO_LOG_END=true F_FAIL=true, unexpected_action()"; fi
+		echo "	⚠️  SET F_PHILO_LOG_END=true F_FAIL=true, unexpected_action()"; fi
 
 	err=$1
 	F_PHILO_LOG_END=true
@@ -15,21 +15,23 @@ move_to_next_action() {
 	((i++))
 	if (( i >= ${#logs[@]} )); then 
 		F_PHILO_LOG_END=true
-		return; fi
+		return 1; fi
 
 	time="${logs[i]%% *}"
 	action="${logs[i]#* }"
 
 	if [[ $F_DEBUG == true ]]; then
-		echo "➡️  MOVED to [$time] [$philo] [$action] move_to_next_action()"; fi
+		echo "	➡️  MOVED to [$time] [$philo] [$action] move_to_next_action()"; fi
+	return 0
 }
 
 set_programm_end() {
 	time="$1"
 	if [[ $time -gt $T_PROGRAM_END ]]; then
+		T_PROGRAM_END=$time
 		if [[ $F_DEBUG == true ]]; then
-			echo "⚠️  SET T_PROGRAM_END=$time"; fi
-		T_PROGRAM_END=$time; fi
+			echo "	⚠️  SET T_PROGRAM_END=$time"; fi
+	fi
 }
 
 validate() {
@@ -41,6 +43,10 @@ validate() {
 	declare -gA arr_lastmeal
 	for ((i=1; i<=number_of_philos; i++)); do
 		arr_lastmeal["$i"]=0; done
+
+	declare -gA arr_death
+	for ((i=1; i<=number_of_philos; i++)); do
+		arr_death["$i"]=-1; done
 
 	if [[ $F_DEBUG == true ]]; then 
 		echo -e "\n🐞DEBUG VALIDATION, F_FAIL $F_FAIL"; fi
@@ -73,16 +79,18 @@ validate() {
 			validate_thinking
 
 			if [[ $F_PHILO_LOG_END == true ]]; then
-				arr_lastmeal[$philo]=$T_LAST_MEAL
 				break; fi
 		done
-
-		validate_meals_eaten
-		check_missed_death "$t_die"
 	
-		if [[ $F_DEBUG == true ]]; then
-			echo -e "\n"; fi
 	done
+	if [[ $F_DEBUG == true ]]; then
+		echo -e "\n"; fi
+	validate_meals_eaten
+	validate_death_number
+	check_missed_death
+
+	if [[ $F_DEBUG == true ]]; then
+		echo -e "\n"; fi
 }
 
 is_invalid_input() {
@@ -108,7 +116,7 @@ is_invalid_input() {
 		is_int_positive "$number_of_philos" "$t_die" "$t_eat" "$t_sleep" && \
 		is_int_valid "$number_of_philos" "$t_die" "$t_eat" "$t_sleep"
 	then
-		EXEC_MSG=""; return 1; fi
+		EXEC_MSG=""; F_NO_RUN=false; return 1; fi
 
 	if ! [[ $EXEC_MSG =~ [Ee]rror|[Ii]nvalid|[Ww]rong|[Uu]sage|[Tt]oo|[Mm]ust|[Ii]ncorrect|[Vv]alid ]]; then
 		TEST_MSG="An error message was expected! "
@@ -134,6 +142,8 @@ validate_test() {
 	output="$1"
 	log_file="$2"
 	test_case="$3"
+
+	T_DEATH=-1; F_ANY_DEATH=false
 
 	# Log the output
 	echo -e "${output}" > "$log_file"

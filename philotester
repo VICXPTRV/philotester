@@ -27,6 +27,7 @@ F_FAIL=false
 F_TIMEOUT=false
 F_ANY_DEATH=false
 F_PHILO_LOG_END=false
+F_NO_RUN=true
 T_DEATH=-1
 T_LAST_MEAL=0
 T_SLEEP_END=-1
@@ -96,7 +97,7 @@ else
 # RUN SCRIPT
 print_header
 print_mode
-# measure_system_delay
+measure_system_delay
 check_norm
 build_program
 run_cases

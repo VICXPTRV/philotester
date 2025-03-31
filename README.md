@@ -1,19 +1,20 @@
 # Philotester 🥢
 
-> [!WARNING]  
-> This tester is not fully ready yet. Functionality is very unstable!
+> [!WARNING]
+> This may be buggy. Do not fully trust the results. Always check the logs for verification.
 
-A testing suite for the Dining Philosophers project. Automates norm checks, compilation, test case validation, and memory leak detection.
-
-<!-- ![Test Example](add png when done) -->
+A testing suite for the Dining Philosophers project
 
 ## Features
 
-- **Norminette** - Ensures code adheres to standards
-- **Compilation** - Builds your project before testing
-- **Valgrind** - Memory leak detection
-- **Test Cases** - Predefined scenarios in `cases/` directory
-- **Performance** - Measures system delay impact
+- **Norminette**: Ensures code adheres to coding standards
+- **Compilation**: Builds the project before testing
+- **Memory Leaks**: Detects leaks using Valgrind
+- **Race Conditions**: Detects issues with Helgrind and TSAN
+- **Test Cases**: Predefined scenarios in the `cases/` directory
+- **Performance**: Measures system performance
+
+[Test Example](sample.png)
 
 ## Installation
 
@@ -24,10 +25,9 @@ cd philotester
 ```
 
 2. Configure the tester:
-   - Open file `config`
+   - Open the `config` file
    - Update `EXEC_PATH` to point to your philo project
-   - Update `VALGRIND` to customize flags (optional)
-   - Update `T_LIMIT` to customize timeout (optional)
+   - Optionally update other variables
 
 ## Usage
 
@@ -35,10 +35,12 @@ cd philotester
 ./philotester [options] [cases...]
 ```
 **Options**
-- `-v`    Run with valgrind
-- `-m`    Manual mode
-- `-h`    Display help message
-
+- `-m`    Run with valgrind memcheck
+- `-h`    Run with valgrind helgrind
+- `-s`    Run with thread sanitizer
+- `-p`    Prompt manual input
+- `-H`    Display help message
+- `-d`	  Debug tester itself
 
 ## Adding New Test Cases
 
@@ -58,6 +60,5 @@ number_of_philosophers time_to_die time_to_eat time_to_sleep meal_count
 
 ## Logs
 
-- Your program output in `logs/` directory
-- Valgrind reports in `logs/valgrind.log`
+- All logs are in `logs/` directory
 - Automatic cleanup between runs
