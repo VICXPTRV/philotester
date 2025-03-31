@@ -1,9 +1,9 @@
 # Philotester 🥢
 
+A testing suite for the Dining Philosophers project
+
 > [!WARNING]
 > This may be buggy. Do not fully trust the results. Always check the logs for verification.
-
-A testing suite for the Dining Philosophers project
 
 ## Features
 
