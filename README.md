@@ -40,8 +40,7 @@ cd philotester
 - `-H`    Display help message
 - `-d`	  Debug tester itself
 
-**Tester**
-<img src="sample.png" alt="Test Example" height="500">
+<img src="sample.png" alt="Test Example" height="600">
 
 ## Adding New Test Cases
 
