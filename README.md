@@ -1,4 +1,5 @@
 # Philotester 🥢
+<img src="sample.png" alt="Test Example" height="500">
 
 > [!WARNING]
 > This may be buggy. Do not fully trust the results. Always check the logs for verification.
@@ -13,8 +14,6 @@ A testing suite for the Dining Philosophers project
 - **Race Conditions**: Detects issues with Helgrind and TSAN
 - **Test Cases**: Predefined scenarios in the `cases/` directory
 - **Performance**: Measures system performance
-
-<img src="sample.png" alt="Test Example" height="300">
 
 ## Installation
 
