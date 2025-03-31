@@ -21,6 +21,14 @@ print_header() {
 	print_tester_info
 }
 
+# MODE
+
+print_mode() {
+
+	echo -e "${MANUAL_TEST_COLOR}${MODE_MESSAGE}\n${RESET}"
+
+}
+
 
 # RESULT
 print_result(){
@@ -51,7 +59,7 @@ print_result(){
 	if [[ $F_CRUSH == true ]]; then
 		TEST_EMOJI="$CRUSH_EMOJI"; fi
 
-	echo -e "${color}[$test_number]${TEST_EMOJI}${LEAK_RES}./philo ${test_case}${ADD_COLOR} ${EXEC_MSG}${RESET}${WARNING_COLOR} $timeout_warning ${RESET}"
+	echo -e "${color}[$test_number]${TEST_EMOJI}${CHECK_RES}./philo ${test_case}${ADD_COLOR} ${EXEC_MSG}${RESET}${WARNING_COLOR} $timeout_warning ${RESET}"
 
 	if [[ -n "$TEST_MSG" ]]; then
 		echo -e "${WARNING_COLOR}   $TEST_MSG${RESET}";fi

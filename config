@@ -1,10 +1,13 @@
 #!/bin/bash
 
-EXEC_PATH="../../thread_mutex"											#<------ YOUR PATH
-# EXEC_PATH="path_to_folder"												#<------ YOUR PATH
-# EXEC_PATH="../repos/testcode/philo"
-T_LIMIT=10 																	#<------ YOUR TIMEOUT IN SECONDS
-T_DELAY_TOLERANCE=0															#<------ YOUR DELAY TOLERANCE IN MILLISECONDS, ZERO BY DEFAULT						
+# EXEC_PATH="../../thread_mutex"								
+EXEC_PATH="../repos/testcode/philo"
+
+# EXEC_PATH="path_to_folder"								#<------ YOUR PATH
+T_LIMIT=10 													#<------ YOUR TIMEOUT IN SECONDS
+T_DELAY_TOLERANCE=0											#<------ YOUR DELAY TOLERANCE IN MILLISECONDS, ZERO BY DEFAULT						
 VALGRIND_FLAGS="--leak-check=full --show-leak-kinds=all" 	#<------ YOUR FLAGS
-HELGRIND_FLAGS="--tool=helgrind" 	#<------ YOUR FLAGS
+HELGRIND_FLAGS="--tool=helgrind" 							#<------ YOUR FLAGS
+TSANITAZER="-fsanitize=thread"
+TSAN_OPT="verbosity=4"
 

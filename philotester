@@ -36,34 +36,52 @@ T_DELAY_TOLERANCE_DEATH=10 # ms by subject requirements
 # PATH
 EXEC="${EXEC_PATH}/philo"
 CASES_PATH="cases/"
-if [[ ! -d "logs" ]]; then
-	mkdir logs
-else
-	rm -f logs/*
-fi
-LOGS_PATH="logs"
+[[ ! -d "logs" ]] && mkdir logs
 
-# VALGRIND
-VALG_PATH="valgrind"
-[[ ! -d "${VALG_PATH}" ]] && mkdir ${VALG_PATH}
-rm -f "${VALG_PATH}"/*
-[[ ! -f "${VALG_PATH}/valgrind.supp" ]] && touch "${VALG_PATH}/valgrind.supp"
-VALG_SUP=${VALG_PATH}/valgrind.supp
-VALGRIND="valgrind $VALGRIND_FLAGS"
-HELGRIND="valgrind $HELGRIND_FLAGS"
+if [[ ! -d "logs/log_exec" ]]; then
+	mkdir logs/log_exec
+else
+	rm -f logs/log_exec/*
+fi
+LOGS_PATH="logs/log_exec"
+
+HELP_MSG="Usage: ./philotester [options] [cases...]
+Options:
+  -m   	Enable Valgrind
+  -h   	Enable Helgrind
+  -s   	Enable ThreadSanitizer
+  -p   	Enable prompt mode for manual test
+  -d   	Enable debug mode (for tester itself)
+  -H	Show this help message"
+
+if [[ "$1" == "-H" ]]; then
+  echo -e "${HELP_MSG}"
+  exit 0
+fi
 
 # FLAGS
-F_VALGRIND=false
+F_MEMCHECK=false
+F_HELGRIND=false
 F_MANUAL=false
 F_DEBUG=false
-HELP_MSG="Usage: ./philotester.sh [-vmh] [cases...]\n\nOptions:\n  -v\tRun with valgrind\n  -m\tManual mode\n  -h\tDisplay this help message\n"
-while getopts "vmdh" flag; do
+F_TSAN=false
+
+MODE_MESSAGE="${HEADER_EMOJI}Test mode: Default. Your program's output will be validated
+${ADD_COLOR}No memory leaks or race conditions will be detected. Use appropriate flags to check for leaks and races."
+while getopts "vshmd" flag; do
 	case $flag in
-		v) F_VALGRIND=true ;;
-		m) F_MANUAL=true ;;
+		m) F_MEMCHECK=true ; MEMCHECK="valgrind $MEMCHECK_FLAGS"; MEMC_PATH="logs/log_memc"; \
+					[[ ! -d "$MEMC_PATH" ]] && mkdir "$MEMC_PATH" || rm -f "$MEMC_PATH"/* ; \
+					MODE_MESSAGE="${LEAK_EMOJI} Test mode: Valgrind Memcheck. Your program's output will not be validated" ;;
+		h) F_HELGRIND=true ; HELGRIND="valgrind $HELGRIND_FLAGS"; HELG_PATH="logs/log_helg"; \
+					[[ ! -d "$HELG_PATH" ]] && mkdir "$HELG_PATH" || rm -f "$HELG_PATH"/* ; \
+					MODE_MESSAGE="${RACE_EMOJI} Test mode: Valgring Helgrind. Your program's output will not be validated" ;;
+		s) F_TSAN=true ; TSAN_PATH="logs/log_tsan" ; \
+					[[ ! -d "$TSAN_PATH" ]] && mkdir "$TSAN_PATH" || rm -f "$TSAN_PATH"/* ; \
+					MODE_MESSAGE="${RACE_EMOJI} Test mode: Thread Sanitizer. Your program's output will not be validated" ;;
+		p) F_MANUAL=true ;;
 		d) F_DEBUG=true ;;
-		h) echo -e "${HELP_MSG}" && exit 0 ;;
-		*) echo -e "Use -h for help"; exit 1 ;;
+		*) echo -e "Use -H for help"; exit 1 ;;
 	esac
 done
 shift $((OPTIND - 1))
@@ -77,6 +95,7 @@ else
 
 # RUN SCRIPT
 print_header
+print_mode
 # measure_system_delay
 check_norm
 build_program

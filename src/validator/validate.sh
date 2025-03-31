@@ -139,6 +139,8 @@ validate_test() {
 	echo -e "${output}" > "$log_file"
 	# Get program input
 	parse_input "$test_case"
+	if $F_MEMCHECK || $F_HELGRIND || $F_TSAN; then
+		print_result; return; fi
 	# Check if case of invalid input and stop further processing
 	if is_invalid_input "$number_of_philos" "$t_die" "$t_eat" "$t_sleep" "$meals_to_eat" "$extra_arg"; then
 		print_result; return; fi
