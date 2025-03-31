@@ -3,7 +3,7 @@
 print_tester_info() {
     echo -e "${INFO_EMOJI} ${INFO_COLOR}This tester helps catch regressions during development. Do not rely on results for final validation.${RESET}"
     echo -e "    ${INFO_COLOR}More info: ${UNDERLINE}https://github.com/VICXPTRV/philotester${RESET}"
-    echo -e "    ${INFO_COLOR}Use -h for help.${RESET}"
+    echo -e "    ${INFO_COLOR}Use -H for help.${RESET}"
     echo
 }
 
