@@ -97,7 +97,7 @@ else
 # RUN SCRIPT
 print_header
 print_mode
-measure_system_delay
+#measure_system_delay
 check_norm
 build_program
 run_cases
