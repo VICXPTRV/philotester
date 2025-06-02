@@ -32,6 +32,12 @@ cd philotester
 ```bash
 ./philotester [options] [cases...]
 ```
+```bash
+./philotester random
+```
+```bash
+./philotester invalid_input
+```
 
 **Options**
 
@@ -41,6 +47,13 @@ cd philotester
 - `-p`    Prompt manual input
 - `-H`    Display help message
 - `-d`	Debug tester itself
+
+```bash
+./philotester -h random
+```
+```bash
+./philotester -m random
+```
 
 ![Test Example](sample.png)
 
