@@ -1,4 +1,4 @@
-# Philotester 🥢
+# philotester 🥢
 
 A testing suite for the Dining Philosophers project
 
