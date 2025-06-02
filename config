@@ -1,9 +1,14 @@
 #!/bin/bash
-
-EXEC_PATH="../philosophers/philo"								#<------ YOUR PATH
-T_LIMIT=10 													#<------ YOUR TIMEOUT IN SECONDS
-T_DELAY_TOLERANCE=0											#<------ YOUR DELAY TOLERANCE IN MILLISECONDS, ZERO BY DEFAULT						
-MEMCHECK_FLAGS="--leak-check=full --show-leak-kinds=all" 	#<------ YOUR FLAGS
-HELGRIND_FLAGS="--tool=helgrind --trace-children=yes --fair-sched=yes" 							#<------ YOUR FLAGS
-TSANITAZER="-fsanitize=thread"								#<------ YOUR FLAGS
-TSAN_OPT="verbosity=4"										#<------ YOUR FLAGS
+# Path to your project
+EXEC_PATH="../philo"
+# Timeout in seconds, time to stop execution when it is too long or infinite
+T_LIMIT=20
+# If your machine has huge delay you can ignore it here, by default 0 seconds
+T_DELAY_TOLERANCE=0
+# Valgrind memcheck flags				
+MEMCHECK_FLAGS="--leak-check=full --trace-children=yes --track-fds=yes --show-leak-kinds=all --fair-sched=yes"
+# Valgrind helgrind flags				
+HELGRIND_FLAGS="--tool=helgrind --trace-children=yes --fair-sched=yes" 
+# Tsan config
+TSANITAZER="-fsanitize=thread"
+TSAN_OPT="verbosity=4"

@@ -17,13 +17,13 @@ A testing suite for the Dining Philosophers project
 ## Installation
 
 1. Clone the tester:
+
 ```bash
 git clone git@github.com:VICXPTRV/philotester.git
 cd philotester
 ```
 
-2. Configure the tester:
-   - Open the `config` file
+2. Configure the tester using `config` file:
    - Update `EXEC_PATH` to point to your philo project
    - Optionally update other variables
 
@@ -32,13 +32,15 @@ cd philotester
 ```bash
 ./philotester [options] [cases...]
 ```
+
 **Options**
+
 - `-m`    Run with valgrind memcheck
 - `-h`    Run with valgrind helgrind
 - `-s`    Run with thread sanitizer
 - `-p`    Prompt manual input
 - `-H`    Display help message
-- `-d`	  Debug tester itself
+- `-d`	Debug tester itself
 
 ![Test Example](sample.png)
 
@@ -48,11 +50,13 @@ All test cases are stored in the `cases/` directory.
 You can change existing case or add new one
 
 **Test case format**:
+
 ```text
 number_of_philosophers time_to_die time_to_eat time_to_sleep meal_count
 ```
 
 **Example**:
+
 ```text
 3 400 200 200 2
 1 400 200 200
